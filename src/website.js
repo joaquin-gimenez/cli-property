@@ -1850,20 +1850,26 @@ class WebSite {
     }
 
     setCpcode(propertyLookup, version, cpcode) {
-        
         return this._getProperty(propertyLookup)
             .then(data => {
                 version = WebSite._getLatestVersion(data, version)
                 return this._getPropertyRules(propertyLookup, version)
             })
             .then(rules => {
-                let behaviors = rules.rules.behaviors;
+                let behaviors = [];
+                let cpCodeExists = 0;
                 rules.rules.behaviors.map(behavior => {
                     if (behavior.name == "cpCode") {
+                        cpCodeExists = 1;
                         behavior.options.value.id = cpcode
                     }
                     behaviors.push(behavior)
                 })
+                if (!cpCodeExists) {
+                    let behavior = { "name":"cpCode", "options": { "value" : { "id": Number(cpcode) } } }
+                    behaviors.push(behavior);
+                }
+     
                 rules.rules.behaviors = behaviors;
                 return this._updatePropertyRules(propertyLookup, version, rules);
             })

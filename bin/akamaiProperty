@@ -565,7 +565,7 @@ function main () {
             let app = new WebSite({path:options.config, section: options.section, debug: options.debug});
             if (options.hostnames) {
                 return retrieveHostnames(app, options.property)
-            } else if (options.variables) {
+            } else  {
                 return retrieveProperty(app, options.property, options)
             }
         }
