@@ -566,8 +566,6 @@ function main () {
             if (options.hostnames) {
                 return retrieveHostnames(app, options.property)
             } else if (options.variables) {
-                return retrieveVariables(app, options.property, options)
-            } else {
                 return retrieveProperty(app, options.property, options)
             }
         }
