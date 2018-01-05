@@ -516,7 +516,7 @@ function main () {
               desc: 'Email for confirmation'
             })
         },
-        run: argv => {
+        run: options => {
             let app = new WebSite({path:options.config, section: options.section, debug: options.debug});
             return deactivateProperty(app, options.property, options)
         }
