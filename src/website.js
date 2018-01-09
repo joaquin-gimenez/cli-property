@@ -504,14 +504,6 @@ class WebSite {
                 }
             })
             .then(prop => {
-                if (prop) {
-                    return Promise.resolve(prop)
-                } else {
-                    console.log("Initializing property cache")
-                    return this._initPropertyCache(propertyLookup)
-                }
-            })
-            .then(prop => {
                if (prop) { return Promise.resolve(prop) }
                prop = this._propertyById[propertyLookup] || this._propertyByName[propertyLookup];
                 if (!prop) {
