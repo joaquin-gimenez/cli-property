@@ -548,6 +548,10 @@ function main () {
             })
         },
         run: options => {
+            if (!options.file && !options.srcprop) {
+                console.log("Required: srcprop or file")
+                return Promise.resolve();
+            }
             let app = new WebSite({path:options.config, section: options.section, debug: options.debug});
             return updateProperty(app, options.property, options);
         }
