@@ -6,7 +6,7 @@
 let fs = require('fs')
 
 let source = "bin/akamaiProperty"
-let target = "akamai-property-1.0.0"
+let target = "akamai-property-1.0.1"
 
 var exec = require('child-process-promise').exec;
 
