@@ -27,8 +27,8 @@ exec(`pkg ${source} --target node8-linux-x86,node8-linux-x64,node8-win-x86,node8
         filename =filename.replace('-x64','-amd64')
         filename =filename.replace('macos','mac')
         filename =filename.replace('x86','386')
-        fs.renameSync(oldname,"release/" + filename)
-        require('child_process').execSync(`shasum -a 256 release/${filename} | awk '{print $1}' > release/${filename}.sig`)
+        fs.renameSync(oldname, filename)
+        require('child_process').execSync(`shasum -a 256 ${filename} | awk '{print $1}' > ${filename}.sig`)
       }    
     })
     .catch(function (err) {
