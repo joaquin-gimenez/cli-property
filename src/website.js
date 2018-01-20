@@ -298,7 +298,7 @@ class WebSite {
     //TODO: this will only be called for LATEST, CURRENT_PROD and CURRENT_STAGE. How do we handle collecting hostnames of different versions?
     _getHostnameList(propertyId, versionLookup=0, newConfig = false, edgeHostnameId=null) {
         let property;
-        if (newConfig || edgeHostnameId) {
+        if (newConfig) {
             return Promise.resolve();
         }
 
@@ -1168,9 +1168,9 @@ class WebSite {
 
         return this._getHostnameList(configName,version,false, edgeHostnameId)
             .then(hostnamelist => {
-                if (!edgeHostnameId && hostnamelist.hostnames.items.length > 0) {
+                if (hostnamelist.hostnames.items.length > 0) {
                     hostnamelist.hostnames.items.map(host => {
-                        hostnames.push(host.cnameFrom)
+                        hostnames.push(host)
                         if (!edgeHostnameId) {
                             edgeHostnameId = host.cnameTo ? host.cnameTo : host.edgeHostnameId
                         }
@@ -1184,14 +1184,13 @@ class WebSite {
             })
             .then(() => {
                 return new Promise((resolve, reject) => {
-                    let seenHosts = []  
                     console.info('Updating property hostnames');
                     console.time('... updating hostname');
                     if (deleteHosts) {
                         hostnames.map(host => {
                             myDelete = false;
                             for (let i = 0; i < deleteHosts.length; i++) {
-                                if (deleteHosts[i] == host) {
+                                if (deleteHosts[i] == host || deleteHosts[i] == host.cnameFrom) {
                                     myDelete = true;
                                 }
                             }
@@ -1204,28 +1203,38 @@ class WebSite {
                     }
 
                     let hostSet = new Set(hostsToProcess)
+                    let hostNamelist = []
                     
                     hostSet.forEach(hostname => {
                         let assignHostnameObj;
-                        if (edgeHostnameId && edgeHostnameId.includes("ehn_")) {
+                        let skip = 0;
+                        if ((hostNamelist.indexOf(hostname) != -1 || hostNamelist.indexOf(hostname.cnameFrom) != -1)) {
+                            console.log("Skipping duplicate " + hostname);
+                            skip = 1;
+                        } else if (hostname.cnameFrom) {
+                            hostNamelist.push(hostname.cnameFrom)
+                            assignHostnameObj = hostname;
+                        } else if (edgeHostnameId && edgeHostnameId.includes("ehn_")) {
                             assignHostnameObj = {
                                 "cnameType": "EDGE_HOSTNAME",
                                 "edgeHostnameId": edgeHostnameId,
                                 "cnameFrom": hostname
                             }
+                            hostNamelist.push(hostname)
                         } else if (edgeHostnameId) {
                             assignHostnameObj = {
                                 "cnameType": "EDGE_HOSTNAME",
                                 "cnameTo": edgeHostnameId,
                                 "cnameFrom": hostname
                             }
+                            hostNamelist.push(hostname)
                         }
-                        if (newHostnameArray.indexOf(assignHostnameObj) == -1) {
+                        if (!skip) {
                             console.log("Adding hostname " + assignHostnameObj["cnameFrom"]);
                             newHostnameArray.push(assignHostnameObj);
                         }
                     })
-
+                    
                     let request = {
                         method: 'PUT',
                         path: `/papi/v1/properties/${propertyId}/versions/${version}/hostnames/?contractId=${contractId}&groupId=${groupId}`,
