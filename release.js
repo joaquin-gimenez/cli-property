@@ -18,10 +18,10 @@ exec(`pkg ${source} --target node8-linux-x86,node8-linux-x64,node8-win-x86,node8
         console.log('stderr: ', stderr);
     })
     .then(() => {
-      exec(`ls akamai-property\*`)
+      exec(`ls ${target}\*`)
     .then(result => {
       for (let filename of result.stdout.split('\n')) {
-        console.log(filename)
+	if (!filename) {continue}
         let oldname = filename
         filename =filename.replace('-win-','-windows-')
         filename =filename.replace('-x64','-amd64')
