@@ -564,7 +564,9 @@ function main () {
             .boolean('--hostnames', { desc: 'Retrieve hostnames for property' })
             .boolean('--variables', { desc: 'Retrieve user variables' })
             .boolean('--propver', { desc: 'Retrieve specified version' })
-        },
+            .file('--file <path>', {
+              desc: 'Output file'
+        })},
         run: options => {
             let app = new WebSite({path:options.config, section: options.section, debug: options.debug});
             if (options.hostnames) {
