@@ -110,10 +110,11 @@ Arguments:
   <property>                                                           [required] [string]
 
 General options:
-  --format     Rules format only                                                 [boolean]
-  --hostnames  Retrieve hostnames for property                                   [boolean]
-  --variables  Retrieve user variables                                           [boolean]
-  --propver    Retrieve specified version                                        [boolean]
+  --format       Rules format only                                               [boolean]
+  --hostnames    Retrieve hostnames for property                                 [boolean]
+  --variables    Retrieve user variables                                         [boolean]
+  --propver      Retrieve specified version                                      [boolean]
+  --file <path>  Output file                                                        [file]
 
 Command options:
   --config <config>    Config file                [file] [default: /Users/khunter/.edgerc]
