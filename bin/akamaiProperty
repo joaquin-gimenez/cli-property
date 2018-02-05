@@ -192,14 +192,14 @@ function retrieveProperty(app, targetProperty, options) {
 function retrieveNewestFormat(app) {
     return app.retrieveFormats(true)
     .then(data => {
-        console.log(data);
+        console.log(JSON.stringify(data,'',2));
     })
 }
 
 function retrieveGroups(app) {
     return app.retrieveGroups()
     .then(data => {
-        console.log(data);
+        console.log(JSON.stringify(data,'',2));
     })
 }
 
