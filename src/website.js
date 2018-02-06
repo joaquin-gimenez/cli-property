@@ -94,8 +94,7 @@ class WebSite {
     _initPropertyCache(propertyLookup) {
         let groupcontractList = [];
         let foundProperty = "";
-        console.time('Init PropertyManager cache');
-        console.info('Init PropertyManager cache (hostnames and property list)');
+        console.error('Init PropertyManager cache (hostnames and property list)');
 
         return this._getGroupList()
             .then(data => {
@@ -118,7 +117,7 @@ class WebSite {
                             });
                     });
                 // get the  list of all properties for the known list of contracts and groups now
-                console.info('... retrieving properties from %s groups', groupcontractList.length);
+                console.error('... retrieving properties from %s groups', groupcontractList.length);
                 return Promise.all(groupcontractList.map(v => {
                     return this._getPropertyList(v.contractId, v.groupId);
                 }));
@@ -144,14 +143,12 @@ class WebSite {
                         }
                     });
                 });
-                console.timeEnd('Init PropertyManager cache');
                 cache_complete = 1;
             })
     }
 
     _getNewProperty(propertyId, groupId, contractId) {
         return new Promise((resolve, reject) => {
-            //console.info('... retrieving list of properties {%s : %s}', contractId, groupId);
 
             let request = {
                 method: 'GET',
@@ -164,7 +161,7 @@ class WebSite {
                     let parsed = JSON.parse(response.body);
                     resolve(parsed);
                 } else if (response && response.statusCode == 403) {
-                    console.info('... your client credentials have no access to this group, skipping {%s : %s}', contractId, groupId);
+                    console.error('... your client credentials have no access to this group, skipping {%s : %s}', contractId, groupId);
                     resolve(null);
                 } else {
                     reject(response);
@@ -213,7 +210,7 @@ class WebSite {
                 }
                 cloneFrom.version = version;
                 return new Promise((resolve, reject) => {
-                    console.info('... retrieving clone info');
+                    console.error('... retrieving clone info');
 
                     let request = {
                         method: 'GET',
@@ -236,7 +233,7 @@ class WebSite {
                 })
             })
             .then(cloneFrom => {
-                console.info('... retrieving clone rules for cpcode')
+                console.error('... retrieving clone rules for cpcode')
                 return new Promise((resolve, reject) => {
                     let request = {
                         method: 'GET',
@@ -268,7 +265,7 @@ class WebSite {
 
     _getGroupList(fallThrough = false) {
         return new Promise((resolve, reject) => {
-            console.info('... retrieving list of Group Ids');
+            console.error('... retrieving list of Group Ids');
 
             let request = {
                 method: 'GET',
@@ -280,10 +277,9 @@ class WebSite {
 
             this._edge.send(function (data, response) {
                 if (!response && fallThrough) {
-                    console.log("... No response from server for groups")
+                    console.error("... No response from server for groups")
                     reject();
                 } else if (!response) {
-                    console.log("Grabbing groups again")
                     return this._getGroupList(1)
                 } else if (response && response.statusCode >= 200 && response.statusCode < 400) {
                     let parsed = JSON.parse(response.body);
@@ -312,7 +308,7 @@ class WebSite {
                 const propertyId = property.propertyId;
 
                 return new Promise((resolve, reject) => {
-                    console.info('... retrieving list of hostnames {%s : %s : %s}', contractId, groupId, propertyId);
+                    console.error('... retrieving list of hostnames {%s : %s : %s}', contractId, groupId, propertyId);
                     if (this._propertyHostnameList &&
                         this._propertyHostnameList[propertyId] &&
                         this._propertyHostnameList[propertyId][version]) {
@@ -327,7 +323,7 @@ class WebSite {
 
                         this._edge.send((data, response) => {
                             if ((response == false) || (response == undefined)) {
-                                console.log("... No response from server for " + propertyId + ", skipping")
+                                console.error("... No response from server for " + propertyId + ", skipping")
                                 resolve(propertyId);
                             }
                             if (response && response.body && response.statusCode >= 200 && response.statusCode < 400) {
@@ -335,10 +331,10 @@ class WebSite {
                                 resolve(parsed);
                             } else if (response && (response.statusCode == 500 || response.statusCode == 400)) {
                                 // Work around PAPI bug
-                                console.log("... Error from server for " + propertyId + ", skipping")
+                                console.error("... Error from server for " + propertyId + ", skipping")
                                 resolve(propertyId)
                             } else if (response && response.statusCode == 403) {
-                                console.log("... No permissions for property " + propertyId)
+                                console.error("... No permissions for property " + propertyId)
                                 resolve(propertyId)
                             } else {
                                 reject(response);
@@ -352,7 +348,7 @@ class WebSite {
     _getMainProduct(groupId, contractId) {
         let productInfo;
         return new Promise((resolve, reject) => {
-            console.info('... retrieving list of Products for this contract');
+            console.error('... retrieving list of Products for this contract');
             let request = {
                 method: 'GET',
                 path: `/papi/v1/products?contractId=${contractId}&groupId=${groupId}`,
@@ -385,10 +381,10 @@ class WebSite {
                     })
                     resolve(productInfo);
                 } else if (response.statusCode == 403) {
-                    console.info('... your credentials do not have permission for this group, skipping  {%s : %s}', contractId, groupId);
+                    console.error('... your credentials do not have permission for this group, skipping  {%s : %s}', contractId, groupId);
                     resolve(null);
                 } else {
-                    console.log("Unable to find a delivery product in this group/contract.  Please open an issue if you wish to add one.")
+                    console.error("Unable to find a delivery product in this group/contract.  Please open an issue if you wish to add one.")
                     reject(response);
                 }
                 resolve(productInfo);
@@ -398,7 +394,7 @@ class WebSite {
 
     _searchByValue(queryObj) {
             return new Promise((resolve, reject) => {
-            console.info('... searching ' + Object.keys(queryObj) + ' for ' + queryObj[Object.keys(queryObj)[0]]);
+            console.error('... searching ' + Object.keys(queryObj) + ' for ' + queryObj[Object.keys(queryObj)[0]]);
 
             let request = {
                 method: 'POST',
@@ -420,7 +416,7 @@ class WebSite {
 
     _getPropertyMetadata(propertyId, groupId, contractId) {
          return new Promise((resolve, reject) => {
-            console.info('... getting info for ' + propertyId);
+            console.error('... getting info for ' + propertyId);
 
             let request = {
                 method: 'GET',
@@ -528,13 +524,13 @@ class WebSite {
 
             this._edge.send(function (data, response) {
                 if (!response) {
-                    console.log("... No response from server for edgehostname list")
+                    console.error("... No response from server for edgehostname list")
                     resolve();
                 } else if (response && response.statusCode >= 200 && response.statusCode < 400) {
                     let parsed = JSON.parse(response.body);
                     resolve(parsed);
                 } else if (response.statusCode == 403) {
-                    console.info('... no permissions, ignoring  {%s : %s}', contractId, groupId);
+                    console.error('... no permissions, ignoring  {%s : %s}', contractId, groupId);
                     resolve(null);
                 } else {
                     reject(response);
@@ -545,7 +541,6 @@ class WebSite {
 
     _getPropertyList(contractId, groupId) {
         return new Promise((resolve, reject) => {
-            //console.info('... retrieving list of properties {%s : %s}', contractId, groupId);
             let request = {
                 method: 'GET',
                 path: `/papi/v1/properties?contractId=${contractId}&groupId=${groupId}`,
@@ -553,7 +548,7 @@ class WebSite {
             this._edge.auth(request);
             this._edge.send((data, response) => {
                 if (!response) {
-                    console.log("... No response from server for property list")
+                    console.error("... No response from server for property list")
                 } else if (response && response.statusCode >= 200 && response.statusCode < 400) {
                     let parsed = JSON.parse(response.body);
                     resolve(parsed);
@@ -579,10 +574,7 @@ class WebSite {
                 }
 
                 return new Promise((resolve, reject) => {
-                    console.time('... retrieving');
-                    console.info(`... retrieving property (${data.propertyName}) v${version}`);
-                    //console.info('... retrieving list of hostnames {%s : %s : %s}', contractId, groupId, propertyId);
-                    
+                    console.error(`... retrieving property (${data.propertyName}) v${version}`);
 
                     let request = {
                         method: 'GET',
@@ -595,7 +587,6 @@ class WebSite {
                         if (!response && fallThrough) {
                             reject("No response from server.  Please retry.");
                         } 
-                        console.timeEnd('... retrieving');
                         if (response && response.statusCode >= 200 && response.statusCode < 400) {
                             let parsed = JSON.parse(response.body);
                             resolve(parsed);
@@ -626,8 +617,7 @@ class WebSite {
                 const propertyId = data.propertyId;
                 const propertyName = data.propertyName;
                 return new Promise((resolve, reject) => {
-                    console.time('... copy');
-                    console.info(`... copy property (${propertyName}) v${versionId}`);
+                    console.error(`... copy property (${propertyName}) v${versionId}`);
                     let body = {};
                     body.createFromVersion = versionId;
 
@@ -640,7 +630,6 @@ class WebSite {
                     this._edge.auth(request);
 
                     this._edge.send(function (data, response) {
-                        console.timeEnd('... copy');
                         if (/application\/json/.test(response.headers['content-type'])) {
                             let parsed = JSON.parse(response.body);
                             let matches = !parsed.versionLink ? null : parsed.versionLink.match('versions/(\\d+)?');
@@ -661,8 +650,7 @@ class WebSite {
 
     _createProperty(groupId, contractId, configName, productId, cloneFrom = null) {
         return new Promise((resolve, reject) => {
-            console.time('... creating');
-            console.info(`Creating property config ${configName}`);
+            console.error(`Creating property config ${configName}`);
 
             if (cloneFrom) {
                 productId = cloneFrom.productId;
@@ -683,7 +671,6 @@ class WebSite {
             this._edge.auth(request);
 
             this._edge.send(function (data, response) {
-                console.timeEnd('... creating');
                 if (response.statusCode >= 200 && response.statusCode < 400) {
                     let propertyResponse = JSON.parse(response.body);
                     response = propertyResponse["propertyLink"].split('?')[0].split("/")[4];
@@ -751,8 +738,7 @@ class WebSite {
                 const propertyId = data.propertyId;
                 const propertyName = data.propertyName;
                 return new Promise((resolve, reject) => {
-                    console.time('... updating');
-                    console.info(`... updating property (${propertyName}) v${version}`);
+                    console.error(`... updating property (${propertyName}) v${version}`);
 
                     let request;
 
@@ -774,7 +760,6 @@ class WebSite {
                     this._edge.auth(request);
 
                     this._edge.send(function (data, response) {
-                        console.timeEnd('... updating');
                         if (response.statusCode >= 200 && response.statusCode < 400) {
                             let newRules = JSON.parse(response.body);
                             resolve(newRules);
@@ -788,8 +773,7 @@ class WebSite {
 
     _createCPCode(groupId, contractId, productId, configName) {
         return new Promise((resolve, reject) => {
-            console.info('Creating new CPCode for property');
-            console.time('... creating new CPCode');
+            console.error('Creating new CPCode for property');
             let cpCode = {
                 "productId": productId,
                 "cpcodeName": configName
@@ -803,13 +787,12 @@ class WebSite {
             this._edge.auth(request);
 
             this._edge.send((data, response) => {
-                console.timeEnd('... creating new CPCode');
                 if (response.statusCode >= 200 && response.statusCode < 400) {
                     let parsed = JSON.parse(response.body);
                     let cpcode = parsed["cpcodeLink"].split('?')[0].split("/")[4].split('_')[1];
                     resolve(cpcode);
                 } else {
-                    console.log("Unable to create new cpcode.  Likely this means you have reached the limit of new cpcodes for this contract.  Please try the request again with a specified cpcode");
+                    console.error("Unable to create new cpcode.  Likely this means you have reached the limit of new cpcodes for this contract.  Please try the request again with a specified cpcode");
                     resolve();
                 }
             });
@@ -825,8 +808,7 @@ class WebSite {
             return Promise.resolve(edgeHostname);
         }
         return new Promise((resolve, reject) => {
-            console.info('Creating edge hostname for property: ' + configName);
-            console.time('... creating hostname');
+            console.error('Creating edge hostname for property: ' + configName);
             let hostnameObj = {
                 "productId": productId,
                 "domainPrefix": configName,
@@ -844,7 +826,6 @@ class WebSite {
             this._edge.auth(request);
 
             this._edge.send((data, response) => {
-                console.timeEnd('... creating hostname');
                 if (response.statusCode >= 200 && response.statusCode < 400) {
                     let hostnameResponse = JSON.parse(response.body);
                     response = hostnameResponse["edgeHostnameLink"].split('?')[0].split("/")[4];
@@ -877,8 +858,7 @@ class WebSite {
                 const groupId = data.groupId;
                 const propertyId = data.propertyId;
                 return new Promise((resolve, reject) => {
-                    console.time('... activating');
-                    console.info(`... activating property (${propertyLookup}) v${versionId} on ${env}`);
+                    console.error(`... activating property (${propertyLookup}) v${versionId} on ${env}`);
 
                     let activationData = {
                         propertyVersion: versionId,
@@ -910,12 +890,11 @@ class WebSite {
                 });
             })
             .then(body => {
-                console.timeEnd('... activating');
                 if (body.type && body.type.includes('warnings-not-acknowledged')) {
                     let messages = [];
-                    console.info('... automatically acknowledging %s warnings!', body.warnings.length);
+                    console.error('... automatically acknowledging %s warnings!', body.warnings.length);
                     body.warnings.map(warning => {
-                        console.info('Warnings: %s', warning.detail);
+                        console.error('Warnings: %s', warning.detail);
                         //TODO report these warnings?
                         //console.trace(body.warnings[i]);
                         messages.push(warning.messageId);
@@ -926,7 +905,6 @@ class WebSite {
                     //TODO what about errors?
                     return new Promise((resolve, reject) => {
                         //TODO: chaise redirect?
-                        console.time('Activation Time');
                         let matches = !body.activationLink ? null : body.activationLink.match('activations/([a-z0-9_]+)\\b');
 
                         if (!matches) {
@@ -949,8 +927,7 @@ class WebSite {
                 const groupId = data.groupId;
                 const propertyId = data.propertyId;
                 return new Promise((resolve, reject) => {
-                    console.time('... deactivating');
-                    console.info(`... deactivating property (${propertyLookup}) v${versionId} on ${env}`);
+                    console.error(`... deactivating property (${propertyLookup}) v${versionId} on ${env}`);
 
                     let activationData = {
                         propertyVersion: versionId,
@@ -984,7 +961,7 @@ class WebSite {
                                 resolve(matches[1])
                             }
                         } else if (response.body.match('property_version_not_active')) {
-                            console.log("Version not active on " + env)
+                            console.error("Version not active on " + env)
                             resolve();
                         } else {
                             reject(response.body);
@@ -1038,7 +1015,7 @@ class WebSite {
                     active = !pending && 'ACTIVE' === status.status;
                 });
                 if (pending) {
-                    console.info('... waiting 30s');
+                    console.error('... waiting 30s');
                     return sleep(30000).then(() => {
                         return this._pollActivation(propertyLookup, activationID);
                     });
@@ -1051,8 +1028,7 @@ class WebSite {
 
     _getAssetIds(accountId, groupId) {
         return new Promise((resolve, reject) => {
-            console.info('Gathering asset ID for property');
-            console.time('... requesting');
+            console.error('Gathering asset ID for property');
 
             let request = {
                 method: 'GET',
@@ -1062,7 +1038,6 @@ class WebSite {
             this._edge.auth(request);
 
             this._edge.send((data, response) => {
-                console.timeEnd('... requesting');
                 if (response.statusCode >= 200 && response.statusCode < 400) {
                     let parsed = JSON.parse(response.body);
                     resolve(parsed);
@@ -1077,7 +1052,6 @@ class WebSite {
     _moveProperty(propertyLookup, destGroup, fallThrough = false) {
         let sourceGroup, propertyId, accountId, propertyName;
 
-        console.time('... moving property');
         if (destGroup.match("grp_")) {
             destGroup = destGroup.substring(4);
         }
@@ -1125,7 +1099,7 @@ class WebSite {
                         } else if (!response) {
                             return this._moveProperty(propertyLookup, destGroup, 1);
                         } else if (response.statusCode == 204) {
-                            console.log("Successfully moved " + propertyName + " to group " + destGroup)
+                            console.error("Successfully moved " + propertyName + " to group " + destGroup)
                             resolve();
                         } else if (response.statusCode >= 200 && response.statusCode <= 400) {
                             resolve(response.body);
@@ -1139,14 +1113,12 @@ class WebSite {
 
     _deleteConfig(property) {
         return new Promise((resolve, reject) => {
-            console.time('... deleting property');
             let request = {
                 method: 'DELETE',
                 path: `/papi/v1/properties/${property.propertyId}?contractId=${property.contractId}&groupId=${property.groupId}`
             }
             this._edge.auth(request);
             this._edge.send((data, response) => {
-                console.timeEnd('... deleting property');
                 let parsed = JSON.parse(response.body);
                 if (response.statusCode >= 200 && response.statusCode < 400) {
                     resolve(parsed);
@@ -1184,8 +1156,7 @@ class WebSite {
             })
             .then(() => {
                 return new Promise((resolve, reject) => {
-                    console.info('Updating property hostnames');
-                    console.time('... updating hostname');
+                    console.error('Updating property hostnames');
                     if (deleteHosts) {
                         hostnames.map(host => {
                             myDelete = false;
@@ -1209,7 +1180,7 @@ class WebSite {
                         let assignHostnameObj;
                         let skip = 0;
                         if ((hostNamelist.indexOf(hostname) != -1 || hostNamelist.indexOf(hostname.cnameFrom) != -1)) {
-                            console.log("Skipping duplicate " + hostname);
+                            console.error("Skipping duplicate " + hostname);
                             skip = 1;
                         } else if (hostname.cnameFrom) {
                             hostNamelist.push(hostname.cnameFrom)
@@ -1230,7 +1201,7 @@ class WebSite {
                             hostNamelist.push(hostname)
                         }
                         if (!skip) {
-                            console.log("Adding hostname " + assignHostnameObj["cnameFrom"]);
+                            console.error("Adding hostname " + assignHostnameObj["cnameFrom"]);
                             newHostnameArray.push(assignHostnameObj);
                         }
                     })
@@ -1243,7 +1214,6 @@ class WebSite {
                     
                     this._edge.auth(request);
                     this._edge.send((data, response) => {
-                        console.timeEnd('... updating hostname');
                         if (response.statusCode >= 200 && response.statusCode < 400) {
                             response = JSON.parse(response.body);
                             resolve(response);
@@ -1388,7 +1358,6 @@ class WebSite {
                     //should we allow for multiple uses of the same hash?
                     if (!found[foundNode.md5]) found[foundNode.md5] = [];
                     found[foundNode.md5].push(foundNode);
-                    //console.log("Found: %s with %s parents", foundNode.uuid, newParentRules.length);
                 }
             });
 
@@ -1411,12 +1380,10 @@ class WebSite {
                 if (oldAdvObject) {
                     //copy the chain of rules UUIDs over
                     for (let i = 0; i < newAdvObject.parentRules.length; i++) {
-                        //console.log("Moving Rule UUID: %s --> %s", oldAdvObject.parentRules[i].uuid, newAdvObject.parentRules[i].uuid);
 
                         newAdvObject.parentRules[i].uuid = oldAdvObject.parentRules[i].uuid;
                     }
                     // copy the behavior UUID
-                    //console.log("Moving Behavior UUID: %s --> %s", newAdvObject.advNode.uuid, oldAdvObject.advNode.uuid);
                     newAdvObject.advNode.uuid = oldAdvObject.advNode.uuid;
 
                     //cleanup items in our array
@@ -1466,7 +1433,6 @@ class WebSite {
      */
     _retrieveFormats() {
         return new Promise((resolve, reject) => {
-            console.time('... retrieved rules formats');
             let request = {
                 method: 'GET',
                 path: `/papi/v1/rule-formats`
@@ -1474,7 +1440,6 @@ class WebSite {
 
             this._edge.auth(request);
             this._edge.send((data, response) => {
-                console.timeEnd('... retrieved rules formats');
                 if (response.statusCode >= 200 && response.statusCode < 400) {
                     response = JSON.parse(response.body);
                     resolve(response);
@@ -1535,11 +1500,11 @@ class WebSite {
             .then(property => {
                 if (!hostnames) {
                     let version = (versionLookup && versionLookup > 0) ? versionLookup : WebSite._getLatestVersion(property, versionLookup)
-                    console.info(`Retrieving ${property.propertyName} v${version}`);
+                    console.error(`Retrieving ${property.propertyName} v${version}`);
                     return this._getPropertyRules(property.propertyId, version)
                 } else {
                     let version = (versionLookup && versionLookup > 0) ? versionLookup : WebSite._getLatestVersion(property, versionLookup)
-                    console.info(`Retrieving hostnames for ${property.propertyName} v${version}`)
+                    console.error(`Retrieving hostnames for ${property.propertyName} v${version}`)
                     return this._getHostnameList(property.propertyId, version);
                 }
             });
@@ -1557,7 +1522,7 @@ class WebSite {
     retrieveToFile(propertyLookup, toFile, versionLookup = LATEST_VERSION.LATEST) {
         return this.retrieve(propertyLookup, versionLookup)
             .then(data => {
-                console.info(`Writing ${propertyLookup} rules to ${toFile}`);
+                console.error(`Writing ${propertyLookup} rules to ${toFile}`);
                 if (toFile === '-') {
                     console.log(JSON.stringify(data));
                     return Promise.resolve(data);
@@ -1592,7 +1557,7 @@ class WebSite {
         return this._getProperty(propertyLookup)
             .then(property => {
                 let propertyName = property.propertyName;
-                console.info(`Creating new version for ${propertyName}`);
+                console.error(`Creating new version for ${propertyName}`);
                 const version = WebSite._getLatestVersion(property, 0);
                 property.latestVersion += 1;
                 return this._copyPropertyVersion(property, version);
@@ -1613,7 +1578,7 @@ class WebSite {
             .then(localProp => {
                 property = localProp;
                 let propertyName = localProp.propertyName;
-                console.info(`Updating ${propertyName}`);
+                console.error(`Updating ${propertyName}`);
                 const version = property.latestVersion;
                 return this._copyPropertyVersion(property, version);
             })
@@ -1671,7 +1636,7 @@ class WebSite {
     copy(fromProperty, fromVersion = LATEST_VERSION.LATEST, toProperty) {
         return this.retrieve(fromProperty, fromVersion)
             .then(fromRules => {
-                console.info(`Copy ${fromProperty} v${fromRules.propertyVersion} to ${toProperty}`);
+                console.error(`Copy ${fromProperty} v${fromRules.propertyVersion} to ${toProperty}`);
                 return this.update(toProperty, fromRules)
             });
     }
@@ -1730,7 +1695,7 @@ class WebSite {
                 if (!version || version <= 0)
                     activationVersion = WebSite._getLatestVersion(property, version);
 
-                console.info(`Activating ${propertyLookup} to ${networkEnv}`);
+                console.error(`Activating ${propertyLookup} to ${networkEnv}`);
                 return this._activateProperty(propertyLookup, activationVersion, networkEnv, notes, emailNotification)
             })
             .then(activationId => {
@@ -1765,7 +1730,7 @@ class WebSite {
         return this._getProperty(propertyLookup)
             .then(data => {
                 property = data;
-                console.info(`Deactivating ${propertyLookup} to ${networkEnv}`);
+                console.error(`Deactivating ${propertyLookup} to ${networkEnv}`);
                 let deactivationVersion = WebSite._getLatestVersion(property, networkEnv == AKAMAI_ENV.STAGING ? LATEST_VERSION.STAGING : LATEST_VERSION.PRODUCTION) || 1;
                 return this._deactivateProperty(propertyLookup, deactivationVersion, networkEnv, notes, email)
             })
@@ -1819,7 +1784,7 @@ class WebSite {
         //TODO: deactivate first
         return this._getProperty(propertyLookup)
             .then(property => {
-                console.info(`Deleting ${propertyLookup}`);
+                console.error(`Deleting ${propertyLookup}`);
                 return this._deleteConfig(property)
             })
     }
@@ -1832,7 +1797,7 @@ class WebSite {
      */
     moveProperty(propertyLookup, destGroup) {
         //TODO: deactivate first
-        console.info(`Moving ${propertyLookup} to ` + destGroup);
+        console.error(`Moving ${propertyLookup} to ` + destGroup);
 
         return this._moveProperty(propertyLookup, destGroup)
     }
@@ -2010,7 +1975,7 @@ class WebSite {
                             )
                         )
                     } else {
-                        console.log("... not creating existing variable " + variable.name)
+                        console.error("... not creating existing variable " + variable.name)
                     }
                 })
 
@@ -2019,14 +1984,14 @@ class WebSite {
                         newVars.findIndex(
                             elt => elt.name === variable.name)
                     )
-                    console.log("... deleting variable " + variable.name)
+                    console.error("... deleting variable " + variable.name)
                 })
 
                 changeVars['update'].map(variable => {
                     let ind = newVars.findIndex(elt => elt.name == variable.name);
                     if (ind >= 0) {
                         delete variable.action;
-                        console.log("... updating existing variable " + variable.name)
+                        console.error("... updating existing variable " + variable.name)
                         newVars[ind] = variable;
                     }
                 })
@@ -2044,7 +2009,7 @@ class WebSite {
         return this._getProperty(propertyLookup)
             .then(property => {
                     let version = (versionLookup && versionLookup > 0) ? versionLookup : WebSite._getLatestVersion(property, versionLookup)
-                    console.info(`Retrieving variables for ${property.propertyName} v${version}`);
+                    console.error(`Retrieving variables for ${property.propertyName} v${version}`);
                     return this._getPropertyRules(property.propertyId, version)
             })
             .then(rules => {
@@ -2065,7 +2030,7 @@ class WebSite {
     }
 
     setComments(propertyLookup, version = 0, comment) {
-        console.log("... adding version notes")
+        console.error("... adding version notes")
         return this._getProperty(propertyLookup)
             .then(property => {
                 version = WebSite._getLatestVersion(property, version);
@@ -2198,7 +2163,7 @@ class WebSite {
         }
 
         if (edgeHostname == null) {
-            console.log("EdgeHostname should be specified as new edge hostnames take several minutes to appear.")
+            console.error("EdgeHostname should be specified as new edge hostnames take several minutes to appear.")
             newEdgeHostname = 1;
         }
 
@@ -2285,7 +2250,7 @@ class WebSite {
             })
             .then(edgeHostnameId => {
                 if (newEdgeHostname) {
-                    console.log("Edge hostnames take 30 minutes to appear.  Please use modify to add the hostname at that point.")
+                    console.error("Edge hostnames take 30 minutes to appear.  Please use modify to add the hostname at that point.")
                     return Promise.resolve()
                 } else {
                     return this._assignHostnames(groupId,

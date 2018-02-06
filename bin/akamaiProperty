@@ -280,7 +280,7 @@ function numberVersion(version) {
     } else if (versionstring.match(/^late/i)) {
             returnstring = 0;
     } else if (!versionstring.match(/^\d*$/)){
-            console.log("Unable to parse version string, using latest")
+            console.error("Unable to parse version string, using latest")
             return 0;
     } else {
         returnstring = version;
@@ -619,5 +619,5 @@ function main () {
   main().then(options => {
     var end=Date.now();
     var timeSpent=((end-begin)/1000/60).toPrecision(2) +" mins";
-    console.log("Command time: " + timeSpent)
+    console.error("Command time: " + timeSpent)
   })                                               
