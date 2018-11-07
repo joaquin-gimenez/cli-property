@@ -192,14 +192,14 @@ function retrieveProperty(app, targetProperty, options) {
 function retrieveNewestFormat(app) {
     return app.retrieveFormats(true)
     .then(data => {
-        console.log(data);
+        console.log(JSON.stringify(data,'',2));
     })
 }
 
 function retrieveGroups(app) {
     return app.retrieveGroups()
     .then(data => {
-        console.log(data);
+        console.log(JSON.stringify(data,'',2));
     })
 }
 
@@ -280,7 +280,7 @@ function numberVersion(version) {
     } else if (versionstring.match(/^late/i)) {
             returnstring = 0;
     } else if (!versionstring.match(/^\d*$/)){
-            console.log("Unable to parse version string, using latest")
+            console.error("Unable to parse version string, using latest")
             return 0;
     } else {
         returnstring = version;
@@ -516,7 +516,7 @@ function main () {
               desc: 'Email for confirmation'
             })
         },
-        run: argv => {
+        run: options => {
             let app = new WebSite({path:options.config, section: options.section, debug: options.debug});
             return deactivateProperty(app, options.property, options)
         }
@@ -548,6 +548,10 @@ function main () {
             })
         },
         run: options => {
+            if (!options.file && !options.srcprop) {
+                console.log("Required: srcprop or file")
+                return Promise.resolve();
+            }
             let app = new WebSite({path:options.config, section: options.section, debug: options.debug});
             return updateProperty(app, options.property, options);
         }
@@ -559,15 +563,15 @@ function main () {
             .boolean('--format', { desc: 'Rules format only' })
             .boolean('--hostnames', { desc: 'Retrieve hostnames for property' })
             .boolean('--variables', { desc: 'Retrieve user variables' })
-            .boolean('--propver', { desc: 'Retrieve specified version' })
-        },
+            .string('--propver', { desc: 'Retrieve specified version' })
+            .file('--file <path>', {
+              desc: 'Output file'
+        })},
         run: options => {
             let app = new WebSite({path:options.config, section: options.section, debug: options.debug});
             if (options.hostnames) {
                 return retrieveHostnames(app, options.property)
-            } else if (options.variables) {
-                return retrieveVariables(app, options.property, options)
-            } else {
+            } else  {
                 return retrieveProperty(app, options.property, options)
             }
         }
@@ -615,5 +619,5 @@ function main () {
   main().then(options => {
     var end=Date.now();
     var timeSpent=((end-begin)/1000/60).toPrecision(2) +" mins";
-    console.log("Command time: " + timeSpent)
+    console.error("Command time: " + timeSpent)
   })                                               
