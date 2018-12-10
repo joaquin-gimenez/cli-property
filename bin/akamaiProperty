@@ -420,7 +420,7 @@ function main () {
           params: [{ hidden: true }],
           setup: sywac => {
             sywac
-            .string('--propver <propver>', {
+            .number('--propver <propver>', {
                 desc: 'Property version - LATEST/STAG/PROD/<number>'
             })
             .stringArray('--addhosts <addhosts>', {
@@ -490,7 +490,7 @@ function main () {
               choices: NETWORK_CHOICES,
               required: true
             })
-            .string('--propver <version>', {
+            .number('--propver <version>', {
               desc: 'Source version to activate'
             })
             .string('--email <address>', { // could use a `coerce` function to parse the email address
@@ -563,7 +563,7 @@ function main () {
             .boolean('--format', { desc: 'Rules format only' })
             .boolean('--hostnames', { desc: 'Retrieve hostnames for property' })
             .boolean('--variables', { desc: 'Retrieve user variables' })
-            .string('--propver', { desc: 'Retrieve specified version' })
+            .number('--propver', { desc: 'Retrieve specified version' })
             .file('--file <path>', {
               desc: 'Output file'
         })},
