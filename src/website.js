@@ -933,6 +933,7 @@ class WebSite {
                     let activationData = {
                         propertyVersion: versionId,
                         network: env,
+                        note: notes,
                         notifyEmails: email,
                         activationType: "DEACTIVATE",
                         complianceRecord: {

@@ -59,7 +59,7 @@ function activateProperty(app, targetProperty, options) {
                 return app.activate(   targetProperty, 
                                             numberVersion(options.propver), 
                                             WebSite.AKAMAI_ENV.STAGING,
-                                            "Updated Automatically to staging.", 
+                                            options.notes || "Updated Automatically to staging.", 
                                             options.email);
             return Promise.resolve(data);
         })
@@ -68,7 +68,7 @@ function activateProperty(app, targetProperty, options) {
                 return app.activate(   targetProperty, 
                                             numberVersion(options.propver), 
                                             WebSite.AKAMAI_ENV.PRODUCTION,
-                                            "Updated Automatically to prod.", 
+                                            options.notes || "Updated Automatically to prod.", 
                                             options.email);
             return Promise.resolve(data);
         });
@@ -76,14 +76,14 @@ function activateProperty(app, targetProperty, options) {
 
 function deactivateProperty(app, targetProperty, options) {
     section = options.section || section;
-    
+
     let env = options.network.toUpperCase();
     return Promise.resolve()
         .then(() => {
             if ("BOTH" === env || env.startsWith("STAG"))
                return app.deactivate(  targetProperty, 
                                             WebSite.AKAMAI_ENV.STAGING,
-                                            "Automatically deactivating on staging.", 
+                                            options.notes || "Automatically deactivating on staging.", 
                                             options.email);
             return Promise.resolve();
         })
@@ -91,7 +91,7 @@ function deactivateProperty(app, targetProperty, options) {
             if ("BOTH" === env || env.startsWith("PROD"))
                 return app.deactivate( targetProperty, 
                                             WebSite.AKAMAI_ENV.PRODUCTION,
-                                            "Automatically deactivating on prod.", 
+                                            options.notes || "Automatically deactivating on prod.", 
                                             options.email);
             return Promise.resolve();
         });
@@ -496,6 +496,9 @@ function main () {
             .string('--email <address>', { // could use a `coerce` function to parse the email address
               desc: 'Email for confirmation'
             })
+            .string('--notes <note>', {
+              desc: 'Add a note on activation'
+            })
         },
         run: options => {
             let app = new WebSite({path:options.config, section: options.section, debug: options.debug});
@@ -514,6 +517,9 @@ function main () {
             })
             .string('--email <address>', { // could use a `coerce` function to parse the email address
               desc: 'Email for confirmation'
+            })
+            .string('--notes <note>', {
+                desc: 'Add a note on deactivation'
             })
         },
         run: options => {
