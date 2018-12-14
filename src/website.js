@@ -1914,7 +1914,7 @@ class WebSite {
                 groupId = data.groupId;
                 configName = data.propertyName;
                 propertyId = data.propertyId;
-                return this._getMainProduct(groupId, contractId)
+                return this._getMainProduct(groupId, contractId, null)
             })
             .then(product => {
                 productId = product.productId;
@@ -2283,7 +2283,7 @@ class WebSite {
             })
     }
 
-    createFromFile(hostnames = [], srcFile, configName = null, contractId = null, groupId = null, cpcode = null, origin = null, edgeHostname = null) {
+    createFromFile(hostnames = [], srcFile, configName = null, contractId = null, groupId = null, cpcode = null, origin = null, edgeHostname = null, ruleformat = null, productId = null) {
         let names = this._getConfigAndHostname(configName, hostnames);
         configName = names[0];
         hostnames = names[1];
@@ -2307,7 +2307,7 @@ class WebSite {
                    cpcode = behavior.options.value.id
                 }
             })
-            return this.create(hostnames, cpcode, configName, contractId, groupId, rules, origin, edgeHostname)
+            return this.create(hostnames, cpcode, configName, contractId, groupId, rules, origin, edgeHostname, ruleformat, productId);
         })
     }
 
