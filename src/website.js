@@ -345,7 +345,7 @@ class WebSite {
             });
     };
 
-    _getMainProduct(groupId, contractId) {
+    _getMainProduct(groupId, contractId, productId) {
         let productInfo;
         return new Promise((resolve, reject) => {
             console.error('... retrieving list of Products for this contract');
@@ -360,7 +360,19 @@ class WebSite {
             this._edge.send(function (data, response) {
                 if (response && response.statusCode >= 200 && response.statusCode < 400) {
                     let parsed = JSON.parse(response.body);
-                    parsed.products.items.map(item => {
+                                        
+                    productId ?
+                    parsed.products.items.map( item => {
+                        if( productId === item.productId) {
+                            productInfo = {
+                                groupId: groupId,
+                                contractId: contractId,
+                                productId: productId,
+                                productName: item.productId.substring(4)
+                            }
+                        }
+                    })
+                    : parsed.products.items.map(item => {
                         if( ["prd_SPM",
                             "prd_Dynamic_Site_Del",
                             "prd_Alta",
@@ -368,8 +380,8 @@ class WebSite {
                             "prd_Download_Delivery",
                             "prd_IoT",
                             "prd_Site_Del",
-			    "prd_Fresca"
-                        ].indexOf(item.productId)>= 0) {
+                            "prd_Fresca"
+                        ].indexOf(item.productId) >= 0) {
                             if (productInfo == null) {
                                 productInfo = {
                                     groupId: groupId,
@@ -379,8 +391,12 @@ class WebSite {
                                 }
                             }
                         }
-                    })
-                    resolve(productInfo);
+                    });
+                    if(productInfo){
+                        resolve(productInfo);
+                    }else{
+                        reject(`Unable to find the Product '${ productId }' in this group/contract.`);
+                    }
                 } else if (response.statusCode == 403) {
                     console.error('... your credentials do not have permission for this group, skipping  {%s : %s}', contractId, groupId);
                     resolve(null);
@@ -1309,13 +1325,13 @@ class WebSite {
             })
     }
 
-    _getPropertyInfo(contractId, groupId) {
+    _getPropertyInfo(contractId, groupId, productId) {
         return this._getGroupList()
             .then(data => {
                 return this._getContractAndGroup(data, contractId, groupId);
             })
             .then(data => {
-                return this._getMainProduct(data.groupId, data.contractId);
+                return this._getMainProduct(data.groupId, data.contractId, productId);
             })
     }
 
@@ -2152,7 +2168,8 @@ class WebSite {
                             newRules = null, 
                             origin = null, 
                             edgeHostname = null, 
-                            secure = false) {
+                            secure = false,
+                            productId = null) {
 
         let newEdgeHostname;
         if (!configName && !hostnames) {
@@ -2175,13 +2192,11 @@ class WebSite {
         if (!origin) {
             origin = "origin-" + configName;
         }
+        
+        let propertyId,
+        edgeHostnameId;
 
-        let productId,
-            productName,
-            propertyId,
-            edgeHostnameId;
-
-        return this._getPropertyInfo(contractId, groupId)
+        return this._getPropertyInfo(contractId, groupId, productId)
             .then(data => {
                 groupId = data.groupId;
                 contractId = data.contractId;
