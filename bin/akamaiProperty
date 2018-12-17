@@ -151,7 +151,7 @@ function createProperty(app, targetProperty, options) {
             options.srcver = numberVersion(options.srcver)
             options.hostnames = hostnames
             return app.createFromExisting(targetProperty, options)
-                                            
+
         }
     })
     .then(() => {
@@ -336,15 +336,16 @@ function main () {
           }
 
       })
-      .command('search <property>', { 
+      .command('search ' + ( process.env.AKAMAI_PROPERTY_NAME ? '[property]' : '<property>' ), { 
         desc: 'search for a property name',
         paramsDesc: 'Enter a string to search for.',
         run: options => {
             let app = new WebSite({path:options.config, section: options.section, debug: options.debug});
+            options.property = options.property || process.env.AKAMAI_PROPERTY_NAME;
             return searchProperties(app, options.property)
         }
       })
-      .command('create <property>', {
+      .command('create ' + ( process.env.AKAMAI_PROPERTY_NAME ? '[property]' : '<property>' ), {
         desc: 'create a new property',
         setup: sywac => {
           sywac
@@ -405,6 +406,7 @@ function main () {
         },
         run: options => {
             let app = new WebSite({path:options.config, section: options.section, debug: options.debug});
+            options.property = options.property || process.env.AKAMAI_PROPERTY_NAME;
             return createProperty(app, options.property, options)
             .then(() => {
                 if (options.forward || options.variables || options.notes) {
@@ -415,7 +417,7 @@ function main () {
             })
         }
       })
-      .command('modify <property>', {
+      .command('modify ' + ( process.env.AKAMAI_PROPERTY_NAME ? '[property]' : '<property>' ), {
           desc: 'Modify specified property',
           params: [{ hidden: true }],
           setup: sywac => {
@@ -476,11 +478,12 @@ function main () {
         },
         run: options => {
             let app = new WebSite({path:options.config, section: options.section, debug: options.debug});
+            options.property = options.property || process.env.AKAMAI_PROPERTY_NAME;
             return modifyProperty(app, options.property, options)
         }
     })
 
-      .command('activate <property>', {
+      .command('activate ' + ( process.env.AKAMAI_PROPERTY_NAME ? '[property]' : '<property>' ), {
         desc: 'activate the property',
         params: [{ hidden: true }],
         setup: sywac => {
@@ -499,10 +502,11 @@ function main () {
         },
         run: options => {
             let app = new WebSite({path:options.config, section: options.section, debug: options.debug});
+            options.property = options.property || process.env.AKAMAI_PROPERTY_NAME;
             return activateProperty(app, options.property, options)
         }
       })
-      .command('deactivate <property>', {
+      .command('deactivate ' + ( process.env.AKAMAI_PROPERTY_NAME ? '[property]' : '<property>' ), {
         desc: 'deactivate the property',
         params: [{ hidden: true }],
         setup: sywac => {
@@ -518,21 +522,23 @@ function main () {
         },
         run: options => {
             let app = new WebSite({path:options.config, section: options.section, debug: options.debug});
+            options.property = options.property || process.env.AKAMAI_PROPERTY_NAME;
             return deactivateProperty(app, options.property, options)
         }
       })
-      .command('delete <property>', {
+      .command('delete ' + ( process.env.AKAMAI_PROPERTY_NAME ? '[property]' : '<property>' ), {
         desc: 'delete a property',
         run: options => {
             options.network = "BOTH"
             let app = new WebSite({path:options.config, section: options.section, debug: options.debug});
+            options.property = options.property || process.env.AKAMAI_PROPERTY_NAME;
             return deactivateProperty(app, options.property, options)
             .then(() => {
                 return deleteProperty(app, options.property, options)
             })
         }
       })
-      .command('update <property>', {
+      .command('update ' + ( process.env.AKAMAI_PROPERTY_NAME ? '[property]' : '<property>' ), {
         desc: 'update target property',
         setup: sywac => {
           sywac
@@ -553,10 +559,11 @@ function main () {
                 return Promise.resolve();
             }
             let app = new WebSite({path:options.config, section: options.section, debug: options.debug});
+            options.property = options.property || process.env.AKAMAI_PROPERTY_NAME;
             return updateProperty(app, options.property, options);
         }
       })
-      .command('retrieve <property>', {
+      .command('retrieve ' + ( process.env.AKAMAI_PROPERTY_NAME ? '[property]' : '<property>' ), {
         desc: 'retrieve rules from target property',
         setup: sywac => {
           sywac
@@ -569,6 +576,7 @@ function main () {
         })},
         run: options => {
             let app = new WebSite({path:options.config, section: options.section, debug: options.debug});
+            options.property = options.property || process.env.AKAMAI_PROPERTY_NAME;
             if (options.hostnames) {
                 return retrieveHostnames(app, options.property)
             } else  {
