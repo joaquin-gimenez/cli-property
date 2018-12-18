@@ -421,7 +421,7 @@ function main () {
           setup: sywac => {
             sywac
             .number('--propver <propver>', {
-                desc: 'Property version - LATEST/STAG/PROD/<number>'
+                desc: 'Property version'
             })
             .stringArray('--addhosts <addhosts>', {
                   desc: 'Comma delimited list of hostnames',
