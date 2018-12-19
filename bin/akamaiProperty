@@ -339,6 +339,9 @@ function main () {
       .command('search ' + ( process.env.AKAMAI_PROPERTY_NAME ? '[property]' : '<property>' ), { 
         desc: 'search for a property name',
         paramsDesc: 'Enter a string to search for.',
+        setup: sywac => {
+            sywac.usage('Usage: $0 <property>(default: [$AKAMAI_PROPERTY_NAME]) [options]')
+        },
         run: options => {
             let app = new WebSite({path:options.config, section: options.section, debug: options.debug});
             options.property = options.property || process.env.AKAMAI_PROPERTY_NAME;
@@ -349,6 +352,7 @@ function main () {
         desc: 'create a new property',
         setup: sywac => {
           sywac
+            .usage('Usage: $0 <property>(default: [$AKAMAI_PROPERTY_NAME]) [options]')
             .string('--clone <from>', {
               desc: 'Source property to clone from',
               group: 'Source options:'
@@ -422,6 +426,7 @@ function main () {
           params: [{ hidden: true }],
           setup: sywac => {
             sywac
+            .usage('Usage: $0 <property>(default: [$AKAMAI_PROPERTY_NAME]) [options]')
             .number('--propver <propver>', {
                 desc: 'Property version - LATEST/STAG/PROD/<number>'
             })
@@ -488,6 +493,7 @@ function main () {
         params: [{ hidden: true }],
         setup: sywac => {
           sywac
+            .usage('Usage: $0 <property>(default: [$AKAMAI_PROPERTY_NAME]) [options]')
             .enumeration('--network <network>', { // just a guess that this is the behavior you want, use `string()` otherwise
               desc: 'Network for activation',
               choices: NETWORK_CHOICES,
@@ -511,6 +517,7 @@ function main () {
         params: [{ hidden: true }],
         setup: sywac => {
           sywac
+            .usage('Usage: $0 <property>(default: [$AKAMAI_PROPERTY_NAME]) [options]')
             .enumeration('--network <network>', {
               desc: 'Network for deactivation',
               choices: NETWORK_CHOICES,
@@ -528,6 +535,9 @@ function main () {
       })
       .command('delete ' + ( process.env.AKAMAI_PROPERTY_NAME ? '[property]' : '<property>' ), {
         desc: 'delete a property',
+        setup: sywac => {
+            sywac.usage('Usage: $0 <property>(default: [$AKAMAI_PROPERTY_NAME]) [options]')
+        },
         run: options => {
             options.network = "BOTH"
             let app = new WebSite({path:options.config, section: options.section, debug: options.debug});
@@ -542,6 +552,7 @@ function main () {
         desc: 'update target property',
         setup: sywac => {
           sywac
+            .usage('Usage: $0 <property>(default: [$AKAMAI_PROPERTY_NAME]) [options]')
             .string('--srcprop <property>', {
               desc: 'Source property'
             })
@@ -567,6 +578,7 @@ function main () {
         desc: 'retrieve rules from target property',
         setup: sywac => {
           sywac
+            .usage('Usage: $0 <property>(default: [$AKAMAI_PROPERTY_NAME]) [options]')
             .boolean('--format', { desc: 'Rules format only' })
             .boolean('--hostnames', { desc: 'Retrieve hostnames for property' })
             .boolean('--variables', { desc: 'Retrieve user variables' })
