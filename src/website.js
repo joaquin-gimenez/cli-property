@@ -368,7 +368,8 @@ class WebSite {
                             "prd_Download_Delivery",
                             "prd_IoT",
                             "prd_Site_Del",
-			    "prd_Fresca"
+                            "prd_Site_Accel",
+            			    "prd_Fresca"
                         ].indexOf(item.productId)>= 0) {
                             if (productInfo == null) {
                                 productInfo = {
