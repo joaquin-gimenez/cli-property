@@ -134,7 +134,8 @@ function createProperty(app, targetProperty, options) {
                                             options.cpcode,
                                             options.origin,
                                             options.edgehostname,
-                                            options.ruleformat);
+                                            options.ruleformat,
+                                            options.product);
 
             } else {
                 return app.create(hostnames, 
@@ -145,7 +146,8 @@ function createProperty(app, targetProperty, options) {
                                             null,
                                             options.origin,
                                             options.edgehostname,
-                                            options.ruleformat)
+                                            options.ruleformat,
+                                            options.product)
             }
         } else {
             options.srcver = numberVersion(options.srcver)
@@ -384,6 +386,10 @@ function main () {
             .string('--group <group>', {
               desc: 'Group for new property',
               group: 'Location options:'
+            })
+            .string('--product <product>', {
+                desc: 'Product for new property',
+                group: 'Location options:'
             })
             .boolean('--nocopy', {
               desc: 'Do not copy cloned hostnames',
