@@ -1224,7 +1224,7 @@ class WebSite {
                             newHostnameArray.push(assignHostnameObj);
                         }
                     })
-                    
+
                     let request = {
                         method: 'PUT',
                         path: `/papi/v1/properties/${propertyId}/versions/${version}/hostnames/?contractId=${contractId}&groupId=${groupId}`,
@@ -2225,7 +2225,7 @@ class WebSite {
                 this._propertyById[propInfo.propertyId] = propInfo;
                 this._propertyByName[configName] = propInfo;
 
-                return this._setRules(groupId, contractId, propertyId, configName, cpcode, hostnames, origin, secure, newRules)
+                return this._setRules(groupId, contractId, productId, configName, cpcode, hostnames, origin, secure, newRules)
             })
             .then(rules => {
                 return this._updatePropertyRules(configName,
@@ -2399,7 +2399,7 @@ class WebSite {
             })
             .then(format => {
                 latestFormat = format;
-                return this._setRules(groupId, contractId, propertyId, configName, cpcode, hostnames, origin, secure)
+                return this._setRules(groupId, contractId, productId, configName, cpcode, hostnames, origin, secure)
             })
             .then(rules => {
                 rules.ruleFormat = latestFormat;
