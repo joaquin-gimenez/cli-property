@@ -23,6 +23,7 @@
  */
 
 var path = require('path');
+var fs = require('fs');
 let untildify = require('untildify');
 let WebSite = require('../index').WebSite;
 
@@ -661,8 +662,13 @@ function main () {
         }
         // if help requested, log it and exit
         if (result.output) {
-          console.log(result.output);
-          process.exit(result.code)
+            if(result.argv.version && result.output === 'Version unknown'){
+                var version = JSON.parse(fs.readFileSync("package.json")).version || "Version unknown";
+                console.log(version);
+            }else{
+                console.log(result.output);
+            }
+            process.exit(result.code);
         }
     })
 }
