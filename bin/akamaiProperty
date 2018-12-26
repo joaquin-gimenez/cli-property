@@ -664,7 +664,7 @@ function main () {
         if (result.output) {
             if(result.argv.version && result.output === 'Version unknown'){
               try{
-                var version = JSON.parse(fs.readFileSync("packssage.json")).version;
+                var version = JSON.parse(fs.readFileSync("package.json")).version;
                 console.log(version); 
               }catch(e){
                 console.log(result.output)
