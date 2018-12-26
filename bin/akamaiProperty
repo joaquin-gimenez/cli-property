@@ -663,8 +663,12 @@ function main () {
         // if help requested, log it and exit
         if (result.output) {
             if(result.argv.version && result.output === 'Version unknown'){
-                var version = JSON.parse(fs.readFileSync("package.json")).version || "Version unknown";
-                console.log(version);
+              try{
+                var version = JSON.parse(fs.readFileSync("packssage.json")).version;
+                console.log(version); 
+              }catch(e){
+                console.log(result.output)
+              }
             }else{
                 console.log(result.output);
             }
