@@ -42,7 +42,7 @@ let debug = false;
 let targetProperty;
 let searchString;
 
-process.env.NODE_TLS_REJECT_UNAUTHORIZED = "0";
+//process.env.NODE_TLS_REJECT_UNAUTHORIZED = "0";
 
 function errorMessage(error, context) {
   let message = (error.body) ? error.body : (error.message) ? error.message : error;
