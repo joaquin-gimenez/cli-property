@@ -425,6 +425,28 @@ class WebSite {
                 if (response && response.statusCode >= 200 && response.statusCode < 400) {
                     let parsed = JSON.parse(response.body);
                     resolve(parsed);
+                } else if(response.statusCode === 403){
+                    console.error('... your client credentials have no access to this group, skipping {%s : %s}', contractId, groupId);
+                    reject(null);
+                } else {
+                    reject(response);
+                }
+            })
+        })
+    }
+
+    _listProperties(groupId, contractId){
+        return new Promise((resolve, reject) => {
+            console.error('... retrieving list of Properties for this group and contract');
+            let request = {
+                method: 'GET',
+                path: `/papi/v1/properties?contractId=${contractId}&groupId=${groupId}`
+            }
+            this._edge.auth(request);
+            this._edge.send(function(data, response) {
+                if (response && response.statusCode >= 200 && response.statusCode < 400) {
+                    let parsed = JSON.parse(response.body);
+                    resolve(parsed);
                 } else {
                     reject(response);
                 }
@@ -1475,6 +1497,27 @@ class WebSite {
             .then(result => {
                 return result;
             })
+    }
+
+    listProperties(groupId, contractId) {
+        return this._listProperties(groupId, contractId)
+        .then(result => {
+            return result;
+        })
+    }
+
+    listPropertiesToFile(groupId, contractId, toFile) {
+        return this._listProperties(groupId, contractId)
+        .then(result => {
+            return new Promise((resolve, reject) => {
+                fs.writeFile(untildify(toFile), JSON.stringify(result, '', 2), (err) => {
+                    if (err)
+                        reject(err);
+                    else
+                        resolve(result);
+                });
+            });
+        })
     }
 
     retrieveGroups() {
