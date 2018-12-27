@@ -368,11 +368,13 @@ function main () {
             sywac
                 .string('--contract <contract>', {
                     desc: 'Contract to list properties from',
-                    group: 'Location options:'
+                    group: 'Location options:',
+                    required: true
                 })
                 .string('--group <group>', {
                     desc: 'Group to list properties from',
-                    group: 'Location options:'
+                    group: 'Location options:',
+                    required: true
                 })
                 .file('--file <path>', {
                     desc: 'Output file'

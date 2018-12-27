@@ -437,16 +437,6 @@ class WebSite {
 
     _listProperties(groupId, contractId){
         return new Promise((resolve, reject) => {
-            if(!groupId && !contractId){
-                console.error("Please specify a Group and a Contract");
-                reject(null);
-            }else if(!groupId){
-                console.error("Please specify a Group");
-                reject(null);
-            }else if(!contractId){
-                console.error("Please specify a Contract");
-                reject(null);
-            }
             console.error('... retrieving list of Properties for this group and contract');
             let request = {
                 method: 'GET',
