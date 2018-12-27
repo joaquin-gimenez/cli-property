@@ -44,6 +44,11 @@ let searchString;
 
 process.env.NODE_TLS_REJECT_UNAUTHORIZED = "0";
 
+function errorMessage(error, context) {
+  let message = (error.body) ? error.body : (error.message) ? error.message : error;
+  return context.cliMessage(chalk.red.bold('\nERROR: \n\t') + message + '\n');
+}
+
 function activateProperty(app, targetProperty, options) {
     
     let env = options.network.toUpperCase();
@@ -59,7 +64,7 @@ function activateProperty(app, targetProperty, options) {
                 return app.activate(   targetProperty, 
                                             numberVersion(options.propver), 
                                             WebSite.AKAMAI_ENV.STAGING,
-                                            options.comments, 
+                                            options.notes || "Updated Automatically to staging.", 
                                             options.email);
             return Promise.resolve(data);
         })
@@ -68,7 +73,7 @@ function activateProperty(app, targetProperty, options) {
                 return app.activate(   targetProperty, 
                                             numberVersion(options.propver), 
                                             WebSite.AKAMAI_ENV.PRODUCTION,
-                                            options.comments, 
+                                            options.notes || "Updated Automatically to prod.", 
                                             options.email);
             return Promise.resolve(data);
         });
@@ -76,14 +81,14 @@ function activateProperty(app, targetProperty, options) {
 
 function deactivateProperty(app, targetProperty, options) {
     section = options.section || section;
-    
+
     let env = options.network.toUpperCase();
     return Promise.resolve()
         .then(() => {
             if ("BOTH" === env || env.startsWith("STAG"))
                return app.deactivate(  targetProperty, 
                                             WebSite.AKAMAI_ENV.STAGING,
-                                            "Automatically deactivating on staging.", 
+                                            options.notes || "Automatically deactivating on staging.", 
                                             options.email);
             return Promise.resolve();
         })
@@ -91,7 +96,7 @@ function deactivateProperty(app, targetProperty, options) {
             if ("BOTH" === env || env.startsWith("PROD"))
                 return app.deactivate( targetProperty, 
                                             WebSite.AKAMAI_ENV.PRODUCTION,
-                                            "Automatically deactivating on prod.", 
+                                            options.notes || "Automatically deactivating on prod.", 
                                             options.email);
             return Promise.resolve();
         });
@@ -134,7 +139,8 @@ function createProperty(app, targetProperty, options) {
                                             options.cpcode,
                                             options.origin,
                                             options.edgehostname,
-                                            options.ruleformat);
+                                            options.ruleformat,
+                                            options.product);
 
             } else {
                 return app.create(hostnames, 
@@ -145,7 +151,8 @@ function createProperty(app, targetProperty, options) {
                                             null,
                                             options.origin,
                                             options.edgehostname,
-                                            options.ruleformat)
+                                            options.ruleformat,
+                                            options.product)
             }
         } else {
             options.srcver = numberVersion(options.srcver)
@@ -319,30 +326,41 @@ function main () {
        })
       .command('groups', {
         desc: 'retrieve account groups',
-        run: options => {
-            let app = new WebSite({path:options.config, section: options.section, debug: options.debug});
+        run: (options, context) => {
+          try {
+            let app = new WebSite({path: options.config, section: options.section, debug: options.debug});
             return retrieveGroups(app)
+          } catch (error) {
+            return errorMessage(error, context);
+          }
         }
       })
       .command('formats', {
         desc: 'get rules formats',
-        run: options => {
-            let app = new WebSite({path:options.config, section: options.section, debug: options.debug});
+        run: (options, context) => {
+          try {
+            let app = new WebSite({path: options.config, section: options.section, debug: options.debug});
             if (options.newest) {
-                return retrieveNewestFormat(app)
+              return retrieveNewestFormat(app);
             } else {
-                return retrieveFormats(app)
+              return retrieveFormats(app);
             }
+          } catch (error) {
+            return errorMessage(error, context);
           }
-
+        }
       })
       .command('search <string>', { 
         desc: 'search for a property name',
         default: process.env.AKAMAI_PROPERTY_SEARCH_STRING,
         paramsDesc: 'Enter a string to search for.',
-        run: options => {
-            let app = new WebSite({path:options.config, section: options.section, debug: options.debug});
-            return searchProperties(app, options.string)
+        run: (options, context) => {
+          try {
+            let app = new WebSite({path: options.config, section: options.section, debug: options.debug});
+            return searchProperties(app, options.property)
+          } catch (error) {
+            return errorMessage(error, context);
+          }
         }
       })
       .command('create <property>', {
@@ -386,6 +404,10 @@ function main () {
               desc: 'Group for new property',
               group: 'Location options:'
             })
+            .string('--product <product>', {
+                desc: 'Product for new property',
+                group: 'Location options:'
+            })
             .boolean('--nocopy', {
               desc: 'Do not copy cloned hostnames',
               group: 'Source options:'
@@ -404,16 +426,19 @@ function main () {
                 desc: "Retrieve rules for created property"
             })
         },
-        run: options => {
-            let app = new WebSite({path:options.config, section: options.section, debug: options.debug});
-            return createProperty(app, options.property, options)
-            .then(() => {
-                if (options.forward || options.variables || options.notes) {
-                    return modifyProperty(app, options.property, options, command)
-                } else {
-                    return Promise.resolve();
-                }
+        run: (options, context) => {
+          try {
+            let app = new WebSite({path: options.config, section: options.section, debug: options.debug});
+            return createProperty(app, options.property, options).then(() => {
+              if (options.forward || options.variables || options.notes) {
+                return modifyProperty(app, options.property, options, command)
+              } else {
+                return Promise.resolve();
+              }
             })
+          } catch (error) {
+            return errorMessage(error, context);
+          }
         }
       })
       .command('modify <property>', {
@@ -421,8 +446,8 @@ function main () {
           params: [{ hidden: true }],
           setup: sywac => {
             sywac
-            .string('--propver <propver>', {
-                desc: 'Property version - LATEST/STAG/PROD/<number>'
+            .number('--propver <propver>', {
+                desc: 'Property version'
             })
             .stringArray('--addhosts <addhosts>', {
                   desc: 'Comma delimited list of hostnames',
@@ -475,9 +500,13 @@ function main () {
             })
             .file('--variables <file>', { desc: '<REPLACE_ME>' })
         },
-        run: options => {
-            let app = new WebSite({path:options.config, section: options.section, debug: options.debug});
-            return modifyProperty(app, options.property, options)
+        run: (options, context) => {
+            try {
+              let app = new WebSite({path: options.config, section: options.section, debug: options.debug});
+              return modifyProperty(app, options.property, options)
+            } catch (error) {
+              return errorMessage(error, context);
+            }
         }
     })
 
@@ -491,20 +520,23 @@ function main () {
               choices: NETWORK_CHOICES,
               required: true
             })
-            .string('--propver <version>', {
+            .number('--propver <version>', {
               desc: 'Source version to activate'
             })
             .string('--email <address>', { // could use a `coerce` function to parse the email address
               desc: 'Email for confirmation'
             })
-            .string('--comments <comment>', {
-                desc: 'Comments for activation',
-                default: 'Activated Automatically'
+            .string('--notes <note>', {
+              desc: 'Add a note on activation'
             })
         },
-        run: options => {
-            let app = new WebSite({path:options.config, section: options.section, debug: options.debug});
+        run: (options, context) => {
+          try {
+            let app = new WebSite({path: options.config, section: options.section, debug: options.debug});
             return activateProperty(app, options.property, options)
+          } catch (error) {
+            return errorMessage(error, context);
+          }
         }
       })
       .command('deactivate <property>', {
@@ -520,21 +552,31 @@ function main () {
             .string('--email <address>', { // could use a `coerce` function to parse the email address
               desc: 'Email for confirmation'
             })
+            .string('--notes <note>', {
+                desc: 'Add a note on deactivation'
+            })
         },
-        run: options => {
-            let app = new WebSite({path:options.config, section: options.section, debug: options.debug});
+        run: (options, context) => {
+          try {
+            let app = new WebSite({path: options.config, section: options.section, debug: options.debug});
             return deactivateProperty(app, options.property, options)
+          } catch (error){
+            return errorMessage(error, context);
+          }
         }
       })
       .command('delete <property>', {
         desc: 'delete a property',
-        run: options => {
+        run: (options, context) => {
+          try {
             options.network = "BOTH"
-            let app = new WebSite({path:options.config, section: options.section, debug: options.debug});
-            return deactivateProperty(app, options.property, options)
-            .then(() => {
-                return deleteProperty(app, options.property, options)
+            let app = new WebSite({path: options.config, section: options.section, debug: options.debug});
+            return deactivateProperty(app, options.property, options).then(() => {
+              return deleteProperty(app, options.property, options)
             })
+          } catch (error) {
+            return errorMessage(error, context);
+          }
         }
       })
       .command('update <property>', {
@@ -552,13 +594,17 @@ function main () {
               mustExist: true // again, assuming this is what you want
             })
         },
-        run: options => {
+        run: (options, context) => {
+          try {
             if (!options.file && !options.srcprop) {
-                console.log("Required: srcprop or file")
-                return Promise.resolve();
+              console.log("Required: srcprop or file")
+              return Promise.resolve();
             }
-            let app = new WebSite({path:options.config, section: options.section, debug: options.debug});
+            let app = new WebSite({path: options.config, section: options.section, debug: options.debug});
             return updateProperty(app, options.property, options);
+          } catch (error) {
+            return errorMessage(error, context);
+          }
         }
       })
       .command('retrieve <property>', {
@@ -568,17 +614,21 @@ function main () {
             .boolean('--format', { desc: 'Rules format only' })
             .boolean('--hostnames', { desc: 'Retrieve hostnames for property' })
             .boolean('--variables', { desc: 'Retrieve user variables' })
-            .string('--propver', { desc: 'Retrieve specified version' })
+            .number('--propver', { desc: 'Retrieve specified version' })
             .file('--file <path>', {
               desc: 'Output file'
         })},
-        run: options => {
-            let app = new WebSite({path:options.config, section: options.section, debug: options.debug});
+        run: (options, context) => {
+          try {
+            let app = new WebSite({path: options.config, section: options.section, debug: options.debug});
             if (options.hostnames) {
-                return retrieveHostnames(app, options.property)
-            } else  {
-                return retrieveProperty(app, options.property, options)
+              return retrieveHostnames(app, options.property)
+            } else {
+              return retrieveProperty(app, options.property, options)
             }
+          } catch (error) {
+            return errorMessage(error, context);
+          }
         }
       })
       .showHelpByDefault()
@@ -605,15 +655,14 @@ function main () {
       })
       .outputSettings({ maxWidth: 90 })
       .parse()
-      .then(result => {
+      .then((result) => {
         // let errors bubble up
         if (result.errors.length) {
-            console.error("ERROR: ", result.errors[0] || JSON.stringify(result.errors[0]));
-            console.output = "";
+          console.error(chalk.red.bold('\nERROR: \n\t'), result.errors[0].message || JSON.stringify(result.errors[0]), '\n');
         }
         // if help requested, log it and exit
         if (result.output) {
-          console.log(result.output)
+          console.log(result.output);
           process.exit(result.code)
         }
     })
@@ -625,4 +674,4 @@ function main () {
     var end=Date.now();
     var timeSpent=((end-begin)/1000/60).toPrecision(2) +" mins";
     console.error("Command time: " + timeSpent)
-  })                                               
+  });
