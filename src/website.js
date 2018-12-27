@@ -2352,14 +2352,14 @@ class WebSite {
                 }
                 return Promise.resolve(edgeHostnameId)
             })
-            .then(edgeHostnameId => {
+            /*.then(edgeHostnameId => {
                 return this._createEdgeHostname(groupId,
                     contractId,
                     configName,
                     productId,
                     edgeHostnameId,
                     edgeHostname);
-            })
+            })*/
             .then(data => {
                 edgeHostnameId = data;
                 return this._createProperty(groupId,
@@ -2389,7 +2389,7 @@ class WebSite {
                     1,
                     rules);
             })
-            .then(property => {
+            /*.then(property => {
                 return this._assignHostnames(groupId,
                         contractId,
                         configName,
@@ -2399,7 +2399,8 @@ class WebSite {
                         false,
                         true);
                         
-            }).then(data => {
+            })*/
+            .then(data => {
                 return Promise.resolve();
             })
     }

@@ -59,7 +59,7 @@ function activateProperty(app, targetProperty, options) {
                 return app.activate(   targetProperty, 
                                             numberVersion(options.propver), 
                                             WebSite.AKAMAI_ENV.STAGING,
-                                            "Updated Automatically to staging.", 
+                                            options.comments, 
                                             options.email);
             return Promise.resolve(data);
         })
@@ -68,7 +68,7 @@ function activateProperty(app, targetProperty, options) {
                 return app.activate(   targetProperty, 
                                             numberVersion(options.propver), 
                                             WebSite.AKAMAI_ENV.PRODUCTION,
-                                            "Updated Automatically to prod.", 
+                                            options.comments, 
                                             options.email);
             return Promise.resolve(data);
         });
@@ -336,12 +336,13 @@ function main () {
           }
 
       })
-      .command('search <property>', { 
+      .command('search <string>', { 
         desc: 'search for a property name',
+        default: process.env.AKAMAI_PROPERTY_SEARCH_STRING,
         paramsDesc: 'Enter a string to search for.',
         run: options => {
             let app = new WebSite({path:options.config, section: options.section, debug: options.debug});
-            return searchProperties(app, options.property)
+            return searchProperties(app, options.string)
         }
       })
       .command('create <property>', {
@@ -495,6 +496,10 @@ function main () {
             })
             .string('--email <address>', { // could use a `coerce` function to parse the email address
               desc: 'Email for confirmation'
+            })
+            .string('--comments <comment>', {
+                desc: 'Comments for activation',
+                default: 'Activated Automatically'
             })
         },
         run: options => {
