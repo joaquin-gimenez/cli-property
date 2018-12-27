@@ -1720,7 +1720,7 @@ class WebSite {
         return this._getProperty(propertyLookup)
             .then(property => {
                 if (!property.stagingVersion)
-                    new Promise(resolve => reject(`No version in Staging for ${propertyLookup}`));
+                    new Promise((resolve, reject) => reject(`No version in Staging for ${propertyLookup}`));
                 else if (property.productionVersion !== property.stagingVersion)
                     return this.activate(propertyLookup, stagingVersion, AKAMAI_ENV.PRODUCTION, notes, email);
                 else
