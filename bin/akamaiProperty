@@ -159,7 +159,6 @@ function createProperty(app, targetProperty, options) {
             options.srcver = numberVersion(options.srcver)
             options.hostnames = hostnames
             return app.createFromExisting(targetProperty, options)
-
         }
     })
     .then(() => {
@@ -393,13 +392,13 @@ function main () {
             sywac.usage('Usage: $0 <property>(default: [$AKAMAI_PAPI_PROPERTY]) [options]')
         },
         run: (options, context) => {
-            try {
-              let app = new WebSite({path: options.config, section: options.section, debug: options.debug});
-              options.property = options.property || process.env.AKAMAI_PAPI_PROPERTY;
-              return searchProperties(app, options.string)
-            } catch (error) {
-              return errorMessage(error, context);
-            }
+          try {
+            let app = new WebSite({path: options.config, section: options.section, debug: options.debug});
+            options.property = options.property || process.env.AKAMAI_PAPI_PROPERTY;
+            return searchProperties(app, options.string)
+          } catch (error) {
+            return errorMessage(error, context);
+          }
         }
       })
       .command('create ' + ( process.env.AKAMAI_PAPI_PROPERTY ? '[property]' : '<property>' ), {
@@ -674,7 +673,7 @@ function main () {
             .file('--file <path>', {
               desc: 'Output file'
         })},
-        run: (options, context) => {  
+        run: (options, context) => {
           try {
             let app = new WebSite({path: options.config, section: options.section, debug: options.debug});
             options.property = options.property || process.env.AKAMAI_PAPI_PROPERTY;
