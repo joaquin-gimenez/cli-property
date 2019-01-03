@@ -886,11 +886,11 @@ class WebSite {
      * @param notes
      * @param email
      * @param acknowledgeWarnings
-     * @param autoAcceptWarnings
+     * @param showWarnings
      * @returns {Promise.<TResult>}
      * @private
      */
-    _activateProperty(propertyLookup, versionId, env = LATEST_VERSION.STAGING, notes = '', email = ['test@example.com'], acknowledgeWarnings = [], autoAcceptWarnings = true) {
+    _activateProperty(propertyLookup, versionId, env = LATEST_VERSION.STAGING, notes = '', email = ['test@example.com'], acknowledgeWarnings = [], showWarnings = true) {
         return this._getProperty(propertyLookup)
             .then((data) => {
                 //set basic data like contract & group
@@ -934,13 +934,15 @@ class WebSite {
                     let messages = [];
                     console.error('... automatically acknowledging %s warnings!', body.warnings.length);
                     body.warnings.map(warning => {
-                        console.error('Warnings: %s', warning.detail);
+                        if (showWarnings){
+                            console.error('Warnings: %s', warning.detail);
+                        }
                         //TODO report these warnings?
                         //console.trace(body.warnings[i]);
                         messages.push(warning.messageId);
                     });
                     //TODO: check that this doesn't happen more than once...
-                    return this._activateProperty(propertyLookup, versionId, env, notes, email, messages);
+                    return this._activateProperty(propertyLookup, versionId, env, notes, email, messages, showWarnings);
                 } else
                     //TODO what about errors?
                     return new Promise((resolve, reject) => {
@@ -1740,9 +1742,10 @@ class WebSite {
      * @param {string[]} email notivation email addresses
      * @param {boolean} wait whether the Promise should return after activation is completed across the Akamai
      *     platform (wait=true) or if it should return immediately after submitting the job (wait=false)
+     * @param {boolean} showWarnings whether to show warnings
      * @returns {Promise} returns a promise with the TResult of boolean
      */
-    activate(propertyLookup, version = LATEST_VERSION.LATEST, networkEnv = AKAMAI_ENV.STAGING, notes = '', email = ['test@example.com'], wait = true) {
+    activate(propertyLookup, version = LATEST_VERSION.LATEST, networkEnv = AKAMAI_ENV.STAGING, notes = '', email = ['test@example.com'], wait = true, showWarnings = true) {
         //todo: change the version lookup
 
         let emailNotification = email;
@@ -1758,7 +1761,7 @@ class WebSite {
                     activationVersion = WebSite._getLatestVersion(property, version);
 
                 console.error(`Activating ${propertyLookup} to ${networkEnv}`);
-                return this._activateProperty(propertyLookup, activationVersion, networkEnv, notes, emailNotification)
+                return this._activateProperty(propertyLookup, activationVersion, networkEnv, notes, emailNotification, [], showWarnings)
             })
             .then(activationId => {
                 if (networkEnv === AKAMAI_ENV.STAGING)

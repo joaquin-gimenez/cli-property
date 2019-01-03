@@ -53,6 +53,8 @@ function errorMessage(error, context) {
 function activateProperty(app, targetProperty, options) {
     
     let env = options.network.toUpperCase();
+    let showWarnings = !options.nowarnings;
+
     return Promise.resolve()
         .then(() => {
             return app.lookupPropertyIdFromHost(targetProperty);
@@ -66,7 +68,9 @@ function activateProperty(app, targetProperty, options) {
                                             numberVersion(options.propver), 
                                             WebSite.AKAMAI_ENV.STAGING,
                                             options.notes || "Updated Automatically to staging.", 
-                                            options.email);
+                                            options.email,
+                                            true,
+                                            showWarnings);
             return Promise.resolve(data);
         })
         .then(data => {
@@ -75,7 +79,9 @@ function activateProperty(app, targetProperty, options) {
                                             numberVersion(options.propver), 
                                             WebSite.AKAMAI_ENV.PRODUCTION,
                                             options.notes || "Updated Automatically to prod.", 
-                                            options.email);
+                                            options.email,
+                                            true,
+                                            showWarnings);
             return Promise.resolve(data);
         });
 }
@@ -572,6 +578,9 @@ function main () {
             })
             .string('--notes <note>', {
               desc: 'Add a note on activation'
+            })
+            .boolean('--nowarnings', {
+              desc: 'Do not show warnings'
             })
         },
         run: (options, context) => {
