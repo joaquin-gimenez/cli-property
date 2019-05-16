@@ -24,7 +24,7 @@
 
 var path = require('path');
 var fs = require('fs');
-var chalk = require('chalk');
+const chalk = require('chalk');
 let untildify = require('untildify');
 let WebSite = require('../index').WebSite;
 
@@ -249,10 +249,10 @@ function modifyProperty(app, targetProperty, options, command) {
     if (options.new) {
             return app.createNewPropertyVersion(targetProperty)
         }
-    if (options.addhosts.length > 0) {
+    if (options.addhosts && options.addhosts.length > 0) {
             return app.addHostnames(targetProperty, version, options.addhosts, options.edgehostname);
         } 
-    if (options.delhosts.length > 0) {
+    if (options.delhosts && options.delhosts.length > 0) {
             return app.delHostnames(targetProperty, version, options.delhosts, options.edgehostname)
         }
     if (options.origin || options.forward) {
@@ -467,7 +467,7 @@ function main () {
             let app = new WebSite({path: options.config, section: options.section, debug: options.debug});
             return createProperty(app, options.property, options).then(() => {
               if (options.forward || options.variables || options.notes) {
-                return modifyProperty(app, options.property, options, command)
+                return modifyProperty(app, options.property, options, 'create')
               } else {
                 return Promise.resolve();
               }
