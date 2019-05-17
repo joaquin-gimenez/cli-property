@@ -51,6 +51,39 @@ function errorMessage(error, context) {
   return context.cliMessage(chalk.red.bold('\nERROR: \n\t') + message + '\n');
 }
 
+/**
+ * Method to validate that if flag is present, the value for the corresponding flag is set
+ */
+function flagsHaveValue(args, options) {
+  // Reduce arguments to the ones that have "--" in front
+  var flags = args.filter((arg) => {
+    return arg.match(/^--*/);
+  }).map((arg) => {
+    return arg.substring(2, arg.length);
+  });
+  // Check for arrays, strings & numbers that there is a value, Not for booleans
+  for(var flag of flags) {
+    if(Array.isArray(options[flag])) {
+      if(options[flag].length === 0 || options[flag][0].length === 0) {
+        console.log(`please enter a value for --${ flag }`);
+        return false;
+      }
+    }
+    else if(typeof options[flag] === "string"){
+      if (options[flag].length === 0) {
+        console.log(`please enter a value for --${ flag }`);
+        return false;
+      }
+    } else if(typeof options[flag] === "number") {
+      if(isNaN(options[flag])){
+        console.log(`please enter a value for --${ flag }`);
+        return false;
+      }
+    }
+  }
+  return true;
+}
+
 function activateProperty(app, targetProperty, options) {
     
     let env = options.network.toUpperCase();
@@ -464,6 +497,9 @@ function main () {
         },
         run: (options, context) => {
           try {
+            if(!flagsHaveValue(context.args, options)){
+              return;
+            }
             let app = new WebSite({path: options.config, section: options.section, debug: options.debug});
             return createProperty(app, options.property, options).then(() => {
               if (options.forward || options.variables || options.notes) {
