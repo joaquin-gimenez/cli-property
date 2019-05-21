@@ -72,6 +72,7 @@ class WebSite {
         this._propertyHostnameList = {};
         this._edgeHostnames = [];
         this._newestRulesFormat = "";
+        this._accountSwitchKey = "";
         if (auth.create) {
             this._initComplete = true;
         }
@@ -84,7 +85,7 @@ class WebSite {
             this._initComplete = true;
             return Promise.resolve();
         }
-        return this.retrieveFormats(true)
+        return this.retrieveFormats(true, this._accountSwitchKey)
             .then(format => {
                 this._newestRulesFormat = format;
                 return Promise.resolve();
@@ -154,6 +155,8 @@ class WebSite {
                 method: 'GET',
                 path: `/papi/v1/properties/${propertyId}?contractId=${contractId}&groupId=${groupId}`,
             };
+            request.path += this._buildAccountSwitchKeyQuery();
+
             this._edge.auth(request);
 
             this._edge.send(function (data, response) {
@@ -217,6 +220,7 @@ class WebSite {
                         path: `/papi/v1/properties/${cloneFrom.propertyId}/versions/${cloneFrom.version}?contractId=${contractId}&groupId=${groupId}`,
                         followRedirect: false
                     };
+                    request.path += this._buildAccountSwitchKeyQuery();
                     this._edge.auth(request);
 
                     this._edge.send(function (data, response) {
@@ -240,6 +244,7 @@ class WebSite {
                         path: `/papi/v1/properties/${cloneFrom.propertyId}/versions/${cloneFrom.version}/rules?contractId=${contractId}&groupId=${groupId}`,
                         followRedirect: false
                     };
+                    request.path += this._buildAccountSwitchKeyQuery();
                     this._edge.auth(request);
 
                     this._edge.send(function (data, response) {
@@ -273,6 +278,7 @@ class WebSite {
                 followRedirect: false,
                 followAllRedirects: false
             };
+            request.path += this._buildAccountSwitchKeyQuery(true);
             this._edge.auth(request);
 
             this._edge.send(function (data, response) {
@@ -319,6 +325,7 @@ class WebSite {
                             path: `/papi/v1/properties/${propertyId}/versions/${version}/hostnames/?contractId=${contractId}&groupId=${groupId}`,
                             followRedirect: false
                         };
+                        request.path += this._buildAccountSwitchKeyQuery();
                         this._edge.auth(request);
 
                         this._edge.send((data, response) => {
@@ -355,6 +362,7 @@ class WebSite {
                 followRedirect: false,
                 followAllRedirects: false
             };
+            request.path += this._buildAccountSwitchKeyQuery();
             this._edge.auth(request);
 
             this._edge.send(function (data, response) {
@@ -381,7 +389,8 @@ class WebSite {
                             "prd_IoT",
                             "prd_Site_Del",
                             "prd_Site_Accel",
-            			    "prd_Fresca"
+            			    "prd_Fresca",
+			    "prd_Site_Defender"
                         ].indexOf(item.productId)>= 0) {
                             if (productInfo == null) {
                                 productInfo = {
@@ -419,6 +428,7 @@ class WebSite {
                 path: `/papi/v1/search/find-by-value`,
                 body: queryObj
             };
+            request.path += this._buildAccountSwitchKeyQuery(true);
 
             this._edge.auth(request);
             this._edge.send(function (data, response) {
@@ -442,6 +452,8 @@ class WebSite {
                 method: 'GET',
                 path: `/papi/v1/properties?contractId=${contractId}&groupId=${groupId}`
             }
+            request.path += this._buildAccountSwitchKeyQuery();
+
             this._edge.auth(request);
             this._edge.send(function(data, response) {
                 if (response && response.statusCode >= 200 && response.statusCode < 400) {
@@ -462,6 +474,8 @@ class WebSite {
                 method: 'GET',
                 path: `/papi/v1/properties/${propertyId}?contractId=${contractId}&groupId=${groupId}`,
             };
+            request.path += this._buildAccountSwitchKeyQuery();
+
             this._edge.auth(request);
             this._edge.send(function (data, response) {
                 if (response && response.statusCode >= 200 && response.statusCode < 400) {
@@ -560,6 +574,8 @@ class WebSite {
                 method: 'GET',
                 path: `/papi/v1/edgehostnames?contractId=${contractId}&groupId=${groupId}`,
             };
+            request.path += this._buildAccountSwitchKeyQuery();
+
             this._edge.auth(request);
 
             this._edge.send(function (data, response) {
@@ -585,6 +601,8 @@ class WebSite {
                 method: 'GET',
                 path: `/papi/v1/properties?contractId=${contractId}&groupId=${groupId}`,
             };
+            request.path += this._buildAccountSwitchKeyQuery();
+
             this._edge.auth(request);
             this._edge.send((data, response) => {
                 if (!response) {
@@ -621,6 +639,8 @@ class WebSite {
                         path: `/papi/v1/properties/${propertyId}/versions/${version}/rules?contractId=${contractId}&groupId=${groupId}`,
                         followRedirect: false
                     };
+                    request.path += this._buildAccountSwitchKeyQuery();
+
                     this._edge.auth(request);
 
                     this._edge.send(function (data, response) {
@@ -666,6 +686,7 @@ class WebSite {
                         path: `/papi/v1/properties/${propertyId}/versions?contractId=${contractId}&groupId=${groupId}`,
                         body: body
                     };
+                    request.path += this._buildAccountSwitchKeyQuery();
 
                     this._edge.auth(request);
 
@@ -707,6 +728,7 @@ class WebSite {
                 path: `/papi/v1/properties/?contractId=${contractId}&groupId=${groupId}`,
                 body: propertyObj
             };
+            request.path += this._buildAccountSwitchKeyQuery();
 
             this._edge.auth(request);
 
@@ -727,18 +749,17 @@ class WebSite {
             let behaviors = [];
             let children_behaviors = [];
             let cpCodeExists = 0;
-
+            
             rules.rules.behaviors.map(behavior => {
                 if (behavior.name == "origin" && origin) {
-                    behavior.options.hostname = origin;
+                    var defaultOrigin = "origin-" + configName;
+                    if(origin !== defaultOrigin) {
+                        behavior.options.hostname = origin;
+                    }
                 }
                 if (behavior.name == "cpCode") {
                     cpCodeExists = 1;
-                    if (behavior.options.value) {
-                        behavior.options.value = { "id": Number(cpcode) };
-                    } else {
-                        behavior.options.cpcode = { "id": Number(cpcode) };
-                    }
+                    behavior.options.value = { "id": Number(cpcode) };
                 }
                 behaviors.push(behavior);
             })
@@ -751,9 +772,14 @@ class WebSite {
             rules.rules.children.map(child => {
                 child.behaviors.map(behavior => {
                     if (behavior.name == "sureRoute") {
-                        if (!behavior.options.sr_stat_key_mode && !behavior.options.testObjectUrl) {
-                            behavior.options.sr_stat_key_mode = "default";
-                            behavior.options.sr_test_object_url = "/akamai/sureroute-testobject.html"
+                        if (!behavior.options.testObjectUrl) {
+                            behavior.options.testObjectUrl = "/akamai/sureroute-testobject.html"
+                        }
+                        if(!behavior.options.enableCustomKey) {
+                            behavior.options.enableCustomKey = false;
+                        }
+                        if(!behavior.options.customStatKey || !behavior.options.enableCustomKey) {
+                            behavior.options.customStatKey = "default";
                         }
                     }
                     children_behaviors.push(behavior);
@@ -781,7 +807,7 @@ class WebSite {
                     console.error(`... updating property (${propertyName}) v${version}`);
 
                     let request;
-
+                    
                     if (rules.ruleFormat && rules.ruleFormat != "latest" ) {
                         request = {
                                 method: 'PUT',
@@ -796,6 +822,7 @@ class WebSite {
                                 body: rules
                         }
                     }
+                    request.path += this._buildAccountSwitchKeyQuery();
                     
                     this._edge.auth(request);
 
@@ -811,18 +838,19 @@ class WebSite {
             });
     };
 
-    _createCPCode(groupId, contractId, productId, configName) {
+    _createCPCode(groupId, contractId, productId, configName, newcpcodename = null) {
         return new Promise((resolve, reject) => {
             console.error('Creating new CPCode for property');
             let cpCode = {
                 "productId": productId,
-                "cpcodeName": configName
+                "cpcodeName": newcpcodename ? newcpcodename : configName
             };
             let request = {
                 method: 'POST',
                 path: `/papi/v1/cpcodes?contractId=${contractId}&groupId=${groupId}`,
                 body: cpCode
             };
+            request.path += this._buildAccountSwitchKeyQuery();
 
             this._edge.auth(request);
 
@@ -842,6 +870,7 @@ class WebSite {
     //TODO: should only return one edgesuite host name, even if multiple are called - should lookup to see if there is alrady an existing association
     _createEdgeHostname(groupId, contractId, configName, productId, edgeHostnameId = null, edgeHostname = null, force = false, secure = false) {
         if (edgeHostnameId) {
+
             return Promise.resolve(edgeHostnameId);
         }
         if (edgeHostname) {
@@ -849,10 +878,21 @@ class WebSite {
         }
         return new Promise((resolve, reject) => {
             console.error('Creating edge hostname for property: ' + configName);
+            var domainPrefix;
+            var domainSuffix;
+
+            if (edgeHostname) {
+                var edgeHostnameToArray = edgeHostname.split(".");
+                domainSuffix = edgeHostnameToArray.splice(-2).join(".");
+                domainPrefix = edgeHostnameToArray.join(".");
+            }else {
+                domainPrefix = configName;
+                domainSuffix = "edgesuite.net";
+            }
             let hostnameObj = {
                 "productId": productId,
-                "domainPrefix": configName,
-                "domainSuffix": "edgesuite.net",
+                "domainPrefix": domainPrefix,
+                "domainSuffix": domainSuffix,
                 "secure": false,
                 "ipVersionBehavior": "IPV6_COMPLIANCE",
             };
@@ -862,6 +902,7 @@ class WebSite {
                 path: `/papi/v1/edgehostnames?contractId=${contractId}&groupId=${groupId}`,
                 body: hostnameObj
             };
+            request.path += this._buildAccountSwitchKeyQuery();
 
             this._edge.auth(request);
 
@@ -916,6 +957,7 @@ class WebSite {
                         path: `/papi/v1/properties/${propertyId}/activations?contractId=${contractId}&groupId=${groupId}`,
                         body: activationData
                     };
+                    request.path += this._buildAccountSwitchKeyQuery();
 
                     this._edge.auth(request);
 
@@ -985,6 +1027,7 @@ class WebSite {
                         path: `/papi/v1/properties/${propertyId}/activations?contractId=${contractId}&groupId=${groupId}`,
                         body: activationData
                     };
+                    request.path += this._buildAccountSwitchKeyQuery();
 
                     this._edge.auth(request);
 
@@ -1003,6 +1046,9 @@ class WebSite {
                             }
                         } else if (response.body.match('property_version_not_active')) {
                             console.error("Version not active on " + env)
+                            resolve();
+                        } else if (response.body.match(/Property not active in ((STAGING)|(PRODUCTION))/)) {
+                            console.error(response.body.match(/Property not active in ((STAGING)|(PRODUCTION))/)[0])
                             resolve();
                         } else {
                             reject(response.body);
@@ -1025,6 +1071,7 @@ class WebSite {
                         method: 'GET',
                         path: `/papi/v1/properties/${propertyId}/activations/${activationID}?contractId=${contractId}&groupId=${groupId}`,
                     };
+                    request.path += this._buildAccountSwitchKeyQuery();
 
                     this._edge.auth(request);
 
@@ -1075,6 +1122,7 @@ class WebSite {
                 method: 'GET',
                 path: `/user-admin/v1/accounts/${accountId}/groups/${groupId}/properties`
             };
+            request.path += this._buildAccountSwitchKeyQuery(true);
 
             this._edge.auth(request);
 
@@ -1131,6 +1179,7 @@ class WebSite {
                         path: `/user-admin/v1/accounts/${accountId}/properties/${assetId}`,
                         body: moveData
                     };
+                    request.path += this._buildAccountSwitchKeyQuery(true);
 
                     this._edge.auth(request);
 
@@ -1158,6 +1207,8 @@ class WebSite {
                 method: 'DELETE',
                 path: `/papi/v1/properties/${property.propertyId}?contractId=${property.contractId}&groupId=${property.groupId}`
             }
+            request.path += this._buildAccountSwitchKeyQuery();
+
             this._edge.auth(request);
             this._edge.send((data, response) => {
                 let parsed = JSON.parse(response.body);
@@ -1170,11 +1221,11 @@ class WebSite {
         })
     }
 
-    _assignHostnames(groupId, contractId, configName, edgeHostnameId, propertyId, hostnames, deleteHosts=null, newConfig = false) {
+    _assignHostnames(groupId, contractId, configName, edgeHostnameId, propertyId, hostnames, deleteHosts=null, newConfig = false, version = false) {
         let assignHostnameArray, myDelete = false;
         let newHostnameArray = [];
-        let hostsToProcess = []
-        let version, property;
+        let hostsToProcess = [];
+        let property;
         if (!hostnames) {
             hostnames = []
         }
@@ -1190,7 +1241,7 @@ class WebSite {
                     })
                 } 
                 property = this._propertyById[propertyId];
-                version = property.latestVersion;
+                version = version || property.latestVersion;
                 if (!edgeHostnameId) {
                     return Promise.reject("\n\nNo edgehostnames found for property.  Please specify edgehostname.\n\n")
                  }
@@ -1252,6 +1303,7 @@ class WebSite {
                         path: `/papi/v1/properties/${propertyId}/versions/${version}/hostnames/?contractId=${contractId}&groupId=${groupId}`,
                         body: newHostnameArray
                     }
+                    request.path += this._buildAccountSwitchKeyQuery();
                     
                     this._edge.auth(request);
                     this._edge.send((data, response) => {
@@ -1319,24 +1371,23 @@ class WebSite {
         return ([configName, hostnames])
     }
 
-    _setRules(groupId, contractId, productId, configName, cpcode = null, hostnames = [], origin = null, secure = false, baserules=null) {
-        
+    _setRules(groupId, contractId, productId, configName, cpcode = null, hostnames = [], origin = null, secure = false, baserules=null, newcpcodename = false) {
+
         return new Promise((resolve, reject) => {
-            if (cpcode) {
+            if (cpcode && !newcpcodename) {
                 return resolve(cpcode)
             } else {
-                return this._createCPCode(groupId,
-                    contractId,
-                    productId,
-                    configName)
+                return newcpcodename ?  resolve(this._createCPCode(groupId, contractId, productId, configName, newcpcodename))
+                                    :
+                                    resolve(this._createCPCode(groupId, contractId, productId, configName));
             }
         })
-            .then(data => {
+        .then(data => {
                 cpcode = data;
                 if (baserules) {
                     return Promise.resolve(baserules)
                 } else {
-                    return this.retrieve(configName)
+                    return this.retrieve(configName, LATEST_VERSION.LATEST, false, this._accountSwitchKey)
                 }
             })
             .then(rules => {
@@ -1359,83 +1410,9 @@ class WebSite {
             })
     }
 
+    //not being used
     createCPCode(property) {
         return this._createCPCode(property);
-    }
-
-    /**
- * Advanced Metadata can't be automatically replicated, but if we preserver the UUID we can. This method loops through
- * the behaviors and matches and finds advanced entries.  The PS adv. metadata check looks at the md5() of the xml
- * and the UUID of the behavior and the rule ancestry UUID. If all of these things match then the validator will allow
- * the changes to proceed.
- * @param oldRules
- * @param newRules
- * @returns updated Rules
- */
-    static mergeAdvancedUUIDRules(oldRules, newRules) {
-        //find behavior: {name:"advanced"} and "match": { name: "matchAdvanced"}
-        //create md5 tree of ancestry ruleUUID
-        //merge over other rule matches and other behaviors
-        //flag changes that can't be promoted automatically
-
-        let search = (ruleNode, parentRules = [], found = {}) => {
-            let nodeList = ruleNode.behaviors.concat(ruleNode.criteria);
-            nodeList.forEach(advNode => {
-                //look for "advanced" behaviors
-                if (advNode && (advNode.name === "advanced"
-                    || advNode.name === "matchAdvanced")) {
-
-                    let xml = advNode.options.xml || ''
-                        + advNode.options.openXml || ''
-                        + advNode.options.closeXml || '';
-                    let newParentRules = ruleNode.uuid !== "default" ? parentRules.concat([ruleNode]) : parentRules;
-                    let foundNode = {
-                        uuid: advNode.uuid,
-                        xml: xml,
-                        advNode: advNode,
-                        parentRules: newParentRules,
-                        md5: md5(xml)
-                    };
-                    //should we allow for multiple uses of the same hash?
-                    if (!found[foundNode.md5]) found[foundNode.md5] = [];
-                    found[foundNode.md5].push(foundNode);
-                }
-            });
-
-            if (ruleNode.children) {
-                let newParentRules = ruleNode.uuid !== "default" ? parentRules.concat([ruleNode]) : parentRules;
-                ruleNode.children.forEach(childRule => {
-                    search(childRule, newParentRules, found);
-                });
-            }
-            return found;
-        };
-
-        let oldAdvMtdBehaviors = search(oldRules);
-        let newAdvMtdBehaviors = search(newRules);
-        Object.keys(newAdvMtdBehaviors).forEach(key => {
-            newAdvMtdBehaviors[key].forEach(newAdvObject => {
-                let oldAdvObjectList = oldAdvMtdBehaviors[key] || [];
-                let oldAdvObject = oldAdvObjectList.find(x => newAdvObject.parentRules.length === x.parentRules.length);
-
-                if (oldAdvObject) {
-                    //copy the chain of rules UUIDs over
-                    for (let i = 0; i < newAdvObject.parentRules.length; i++) {
-
-                        newAdvObject.parentRules[i].uuid = oldAdvObject.parentRules[i].uuid;
-                    }
-                    // copy the behavior UUID
-                    newAdvObject.advNode.uuid = oldAdvObject.advNode.uuid;
-
-                    //cleanup items in our array
-                    oldAdvMtdBehaviors[key] = oldAdvMtdBehaviors[key].filter(x => x != oldAdvObject);
-                } else {
-                    throw Error("Cannot find Advanced Metadata in the destination rules. For safety, the Advanced behavior has to have been previously pushed on the destination config: " + newAdvObject.xml);
-                }
-            });
-        });
-
-        return newRules;
     }
 
     /**
@@ -1446,7 +1423,8 @@ class WebSite {
      * @param {string} env for the latest version lookup (PRODUCTION | STAGING | latest)
      * @returns {Promise} the {object} of Property as the {TResult}
      */
-    lookupPropertyIdFromHost(hostname, env = LATEST_VERSION.PRODUCTION) {
+    lookupPropertyIdFromHost(hostname, env = LATEST_VERSION.PRODUCTION, accountKey) {
+        this._accountSwitchKey = accountKey;
         return this._getProperty(hostname, env);
     }
 
@@ -1456,6 +1434,8 @@ class WebSite {
                 method: 'GET',
                 path: `/papi/v1/properties/${propertyId}/versions/${version}/hostnames?contractId=${contractId}&groupId=${groupId}`
             }
+            request.path += this._buildAccountSwitchKeyQuery();
+
             this._edge.auth(request);
             this._edge.send((data, response) => {
                 if (response.statusCode >= 200 && response.statusCode < 400) {
@@ -1478,6 +1458,7 @@ class WebSite {
                 method: 'GET',
                 path: `/papi/v1/rule-formats`
             }
+            request.path += this._buildAccountSwitchKeyQuery(true);
 
             this._edge.auth(request);
             this._edge.send((data, response) => {
@@ -1491,22 +1472,29 @@ class WebSite {
         })
     }
     
-    searchProperties(searchString, options) {
-        let searchObj = {"propertyName" : searchString}
+    _buildAccountSwitchKeyQuery(firstQueryParam = false) {
+        return this._accountSwitchKey ? ( ( firstQueryParam ? `?` : "&" ) + `accountSwitchKey=${this._accountSwitchKey}` ) : "";
+    }
+    
+    searchProperties(searchString, accountKey) {
+        let searchObj = {"propertyName" : searchString};
+        this._accountSwitchKey = accountKey;
         return this._searchByValue(searchObj)
             .then(result => {
                 return result;
             })
     }
 
-    listProperties(groupId, contractId) {
+    listProperties(groupId, contractId, accountKey) {
+        this._accountSwitchKey = accountKey;
         return this._listProperties(groupId, contractId)
         .then(result => {
             return result;
         })
     }
 
-    listPropertiesToFile(groupId, contractId, toFile) {
+    listPropertiesToFile(groupId, contractId, toFile, accountKey) {
+        this._accountSwitchKey = accountKey;
         return this._listProperties(groupId, contractId)
         .then(result => {
             return new Promise((resolve, reject) => {
@@ -1520,15 +1508,17 @@ class WebSite {
         })
     }
 
-    retrieveGroups() {
+    retrieveGroups(accountKey) {
+        this._accountSwitchKey = accountKey;
         return this._getGroupList()
             .then(result => {
                return Promise.resolve(result.groups.items)
             })
     }
 
-    retrieveFormats(latest=false) {
+    retrieveFormats(latest=false, accountKey) {
         let latestRule;
+        this._accountSwitchKey = accountKey;
         return this._retrieveFormats()
             .then(result => {
                 if (!latest) {
@@ -1556,8 +1546,9 @@ class WebSite {
          * @param {number} versionLookup specify the version or use LATEST_VERSION.PRODUCTION / STAGING / latest
          * @returns {Promise} with the property rules as the {TResult}
          */
-    retrieve(propertyLookup, versionLookup = LATEST_VERSION.LATEST, hostnames=false) {
+    retrieve(propertyLookup, versionLookup = LATEST_VERSION.LATEST, hostnames=false, accountKey) {
         let propertyId;
+        this._accountSwitchKey = accountKey;
         return this._getProperty(propertyLookup)
             .then(property => {
                 if (!hostnames) {
@@ -1581,8 +1572,9 @@ class WebSite {
    * @returns {Promise} with the property rules as the {TResult}
    */
 
-    retrieveToFile(propertyLookup, toFile, versionLookup = LATEST_VERSION.LATEST) {
-        return this.retrieve(propertyLookup, versionLookup)
+    retrieveToFile(propertyLookup, toFile, versionLookup = LATEST_VERSION.LATEST, accountKey) {
+        this._accountSwitchKey = accountKey;
+        return this.retrieve(propertyLookup, versionLookup, false, this._accountSwitchKey)
             .then(data => {
                 console.error(`Writing ${propertyLookup} rules to ${toFile}`);
                 if (toFile === '-') {
@@ -1605,17 +1597,17 @@ class WebSite {
      * Retrieve the rule format for a given property at the specified version.
      */
 
-    retrievePropertyRuleFormat(propertyLookup, versionLookup = LATEST_VERSION.LATEST) {
-        return this.retrieve(propertyLookup, versionLookup)
+    retrievePropertyRuleFormat(propertyLookup, versionLookup = LATEST_VERSION.LATEST, accountKey) {
+        this._accountSwitchKey = accountKey;
+        return this.retrieve(propertyLookup, versionLookup, false, this._accountSwitchKey)
             .then(data => {
                 console.log(JSON.stringify(data.ruleFormat));
                 return Promise.resolve(data);
             });
     }
 
-    createNewPropertyVersion(propertyLookup) {
-        let property = propertyLookup;
-
+    createNewPropertyVersion(propertyLookup, accountKey) {
+        this._accountSwitchKey = accountKey;
         return this._getProperty(propertyLookup)
             .then(property => {
                 let propertyName = property.propertyName;
@@ -1633,7 +1625,7 @@ class WebSite {
      * @param {Object} newRules of the configuration to be updated. Only the {object}.rules will be copied.
      * @returns {Promise} with the property rules as the {TResult}
      */
-    update(propertyLookup, newRules) {
+    update(propertyLookup, newRules, comment = false) {
         let property = propertyLookup;
 
         return this._getProperty(propertyLookup)
@@ -1646,14 +1638,11 @@ class WebSite {
             })
             .then(newVersionId => {
                 property.latestVersion = newVersionId;
-                return this.retrieve(property, newVersionId);
-            })
-            .then(oldRules => {
-                let updatedRules = newRules;
-                // fallback in case the object is just the rules and not the full proeprty manager response
-                updatedRules.rules = WebSite.mergeAdvancedUUIDRules(oldRules.rules, newRules.rules) ? newRules.rules : newRules;
-                ;
-                return this._updatePropertyRules(property, oldRules.propertyVersion, updatedRules);
+                if(comment) {
+                   newRules.comments = comment;
+                 }
+                 console.log(newRules)
+                return this._updatePropertyRules(property, property.latestVersion, newRules);
             });
     }
 
@@ -1668,7 +1657,8 @@ class WebSite {
      *     Only the {Object}.rules will be copied
      * @returns {Promise} returns a promise with the updated form of the
      */
-    updateFromFile(propertyLookup, srcFile) {
+    updateFromFile(propertyLookup, srcFile, comment = false, accountKey) {
+        this._accountSwitchKey = accountKey;
         return new Promise((resolve, reject) => {
             fs.readFile(untildify(srcFile), (err, data) => {
                 if (err) {
@@ -1680,7 +1670,7 @@ class WebSite {
 
         })
             .then(data => {
-                return this.update(propertyLookup, data)
+                return this.update(propertyLookup, data, comment)
             })
     }
 
@@ -1695,11 +1685,12 @@ class WebSite {
      * @param {string} toProperty either colloquial host name (www.example.com) or canonical PropertyId (prp_123456)
      * @returns {Promise} returns a promise with the TResult of boolean
      */
-    copy(fromProperty, fromVersion = LATEST_VERSION.LATEST, toProperty) {
-        return this.retrieve(fromProperty, fromVersion)
+    copy(fromProperty, fromVersion = LATEST_VERSION.LATEST, toProperty, comment = false, accountKey) {
+        this._accountSwitchKey = accountKey;
+        return this.retrieve(fromProperty, fromVersion, false, this._accountSwitchKey)
             .then(fromRules => {
                 console.error(`Copy ${fromProperty} v${fromRules.propertyVersion} to ${toProperty}`);
-                return this.update(toProperty, fromRules)
+                return this.update(toProperty, fromRules, comment)
             });
     }
 
@@ -1722,7 +1713,7 @@ class WebSite {
                 if (!property.stagingVersion)
                     new Promise((resolve, reject) => reject(`No version in Staging for ${propertyLookup}`));
                 else if (property.productionVersion !== property.stagingVersion)
-                    return this.activate(propertyLookup, stagingVersion, AKAMAI_ENV.PRODUCTION, notes, email);
+                    return this.activate(propertyLookup, stagingVersion, AKAMAI_ENV.PRODUCTION, notes, email, this._accountSwitchKey);
                 else
                     new Promise(resolve => resolve(true));
             });
@@ -1742,14 +1733,14 @@ class WebSite {
      *     platform (wait=true) or if it should return immediately after submitting the job (wait=false)
      * @returns {Promise} returns a promise with the TResult of boolean
      */
-    activate(propertyLookup, version = LATEST_VERSION.LATEST, networkEnv = AKAMAI_ENV.STAGING, notes = '', email = ['test@example.com'], wait = true) {
+    activate(propertyLookup, version = LATEST_VERSION.LATEST, networkEnv = AKAMAI_ENV.STAGING, notes = '', email = ['test@example.com'], wait = true, accountKey) {
         //todo: change the version lookup
-
         let emailNotification = email;
         if (!Array.isArray(emailNotification))
             emailNotification = [email];
         let activationVersion = version;
         let property = propertyLookup;
+        this._accountSwitchKey = accountKey;
 
         return this._getProperty(propertyLookup)
             .then(data => {
@@ -1784,10 +1775,11 @@ class WebSite {
      *     platform (wait=true) or if it should return immediately after submitting the job (wait=false)
      * @returns {Promise} returns a promise with the TResult of boolean
      */
-    deactivate(propertyLookup, networkEnv = AKAMAI_ENV.STAGING, notes = '', email = ['test@example.com'], wait = true) {
+    deactivate(propertyLookup, networkEnv = AKAMAI_ENV.STAGING, notes = '', email = ['test@example.com'], wait = true, accountKey) {
         if (!Array.isArray(email))
             email = [email];
         let property;
+        this._accountSwitchKey = accountKey;
 
         return this._getProperty(propertyLookup)
             .then(data => {
@@ -1810,16 +1802,18 @@ class WebSite {
             })
     }
 
-    assignEdgeHostname(propertyLookup, version = 0, edgeHostname) {
+    assignEdgeHostname(propertyLookup, version = 0, edgeHostname, accountKey) {
         let contractId,
             groupId,
             productId,
             propertyId,
             configName;
 
+        this._accountSwitchKey = accountKey;
+
         return this._getProperty(propertyLookup)
             .then(data => {
-                version = WebSite._getLatestVersion(data, version)
+                version = version || WebSite._getLatestVersion(data, version);
                 contractId = data.contractId;
                 groupId = data.groupId;
                 configName = data.propertyName;
@@ -1830,7 +1824,10 @@ class WebSite {
                     edgeHostname,
                     propertyId,
                     null,
-                    null);
+                    null,
+                    null,
+                    false,
+                    version);
             }).then(data => {
                 return Promise.resolve();
             })
@@ -1842,7 +1839,8 @@ class WebSite {
      * @param {string} property Lookup either colloquial host name (www.example.com) or canonical PropertyId (prp_123456).
      *     If the host name is moving between property configurations, use lookupPropertyIdFromHost()
      */
-    deleteProperty(propertyLookup) {
+    deleteProperty(propertyLookup, accountkey) {
+      this._accountSwitchKey = accountkey;
         //TODO: deactivate first
         return this._getProperty(propertyLookup)
             .then(property => {
@@ -1857,14 +1855,16 @@ class WebSite {
      * @param {string} property Lookup either colloquial host name (www.example.com) or canonical PropertyId (prp_123456).
      *     If the host name is moving between property configurations, use lookupPropertyIdFromHost()
      */
-    moveProperty(propertyLookup, destGroup) {
+    moveProperty(propertyLookup, destGroup, accountKey) {
+        this._accountSwitchKey = accountKey;
         //TODO: deactivate first
         console.error(`Moving ${propertyLookup} to ` + destGroup);
 
         return this._moveProperty(propertyLookup, destGroup)
     }
 
-    setRuleFormat(propertyLookup, version, ruleformat) {
+    setRuleFormat(propertyLookup, version, ruleformat, accountKey) {
+        this._accountSwitchKey = accountKey;
         
         return this._getProperty(propertyLookup)
             .then(data => {
@@ -1877,7 +1877,8 @@ class WebSite {
             })
     }
 
-    setCpcode(propertyLookup, version, cpcode) {
+    setCpcode(propertyLookup, version, cpcode, accountKey) {
+        this._accountSwitchKey = accountKey;
         return this._getProperty(propertyLookup)
             .then(data => {
                 version = WebSite._getLatestVersion(data, version)
@@ -1889,7 +1890,7 @@ class WebSite {
                 rules.rules.behaviors.map(behavior => {
                     if (behavior.name == "cpCode") {
                         cpCodeExists = 1;
-                        behavior.options.value.id = cpcode
+                        behavior.options = { "value" : { "id": Number(cpcode) } };
                     }
                     behaviors.push(behavior)
                 })
@@ -1903,49 +1904,49 @@ class WebSite {
             })
     }
 
-    delHostnames(propertyLookup, version, hostnames) {
+    delHostnames(propertyLookup, version = 0, hostnames, accountKey) {
         let contractId,
             groupId,
-            productId,
             propertyId,
-            configName,
-            hostlist;
+            configName;
+
+        this._accountSwitchKey = accountKey;
 
         let names = this._getConfigAndHostname(propertyLookup, hostnames);
         configName = names[0];
         hostnames = names[1];
 
-
         return this._getProperty(propertyLookup)
             .then(data => {
-                version = WebSite._getLatestVersion(data, 0)
+                version = version || WebSite._getLatestVersion(data, version)
                 contractId = data.contractId;
                 groupId = data.groupId;
                 configName = data.propertyName;
                 propertyId = data.propertyId;
-                return this._getHostnameList(configName, version)
-            })
-            .then(hostnamelist => {
-                hostlist = hostnamelist.hostnames.items;
+                
                 return this._assignHostnames(groupId,
                     contractId,
                     configName,
                     null,
                     propertyId,
                     null,
-                    hostnames);
+                    hostnames,
+                    false,
+                    version);
             }).then(data => {
                 return Promise.resolve();
             })
     }
 
-    addHostnames(propertyLookup, version = 0, hostnames, edgeHostname = null) {
+    addHostnames(propertyLookup, version = 0, hostnames, edgeHostname = null, accountKey) {
         let contractId,
             groupId,
             productId,
             propertyId,
             configName,
             hostlist;
+
+        this._accountSwitchKey = accountKey;
             
         let names = this._getConfigAndHostname(propertyLookup, hostnames);
         configName = names[0];
@@ -1982,20 +1983,24 @@ class WebSite {
                     configName,
                     edgeHostnameId,
                     propertyId,
-                    hostnames);
+                    hostnames,
+                    null,
+                    false,
+                    version);
             }).then(data => {
                 return Promise.resolve();
             })
     }
 
-    setVariables(propertyLookup, version = 0, variablefile) {
+    setVariables(propertyLookup, version = 0, variablefile, accountKey) {
         let changeVars = {
             "delete": [],
             "create": [],
             "update": []
         };
-
         let variables;
+
+        this._accountSwitchKey = accountKey;
 
         return new Promise((resolve, reject) => {
             fs.readFile(untildify(variablefile), (err, data) => {
@@ -2067,7 +2072,8 @@ class WebSite {
             })
     }
 
-    getVariables(propertyLookup, versionLookup=0, filename=null) {       
+    getVariables(propertyLookup, versionLookup=0, filename=null, accountKey) {
+        this._accountSwitchKey = accountKey;       
         return this._getProperty(propertyLookup)
             .then(property => {
                     let version = (versionLookup && versionLookup > 0) ? versionLookup : WebSite._getLatestVersion(property, versionLookup)
@@ -2091,7 +2097,8 @@ class WebSite {
             })
     }
 
-    setComments(propertyLookup, version = 0, comment) {
+    setComments(propertyLookup, version = 0, comment, accountKey) {
+        this._accountSwitchKey = accountKey;
         console.error("... adding version notes")
         return this._getProperty(propertyLookup)
             .then(property => {
@@ -2107,9 +2114,11 @@ class WebSite {
             })
     }
     
-    setOrigin(propertyLookup, version = 0, origin, forward) {
+    setOrigin(propertyLookup, version = 0, origin, forward, accountKey) {
         let forwardHostHeader;
         let customForward = "";
+
+        this._accountSwitchKey = accountKey;
         
         if (forward == "origin") {
             forwardHostHeader = "ORIGIN_HOSTNAME"
@@ -2150,7 +2159,8 @@ class WebSite {
             })
     }
 
-    setSureRoute(propertyLookup, version=0, sureroutemap, surerouteto, sureroutetohost) {
+    setSureRoute(propertyLookup, version=0, sureroutemap, surerouteto, sureroutetohost, accountKey) {
+        this._accountSwitchKey = accountKey;
         return this._getProperty(propertyLookup)
             .then(property => {
                 version = WebSite._getLatestVersion(property, version);
@@ -2214,7 +2224,11 @@ class WebSite {
                             origin = null, 
                             edgeHostname = null, 
                             secure = false,
-                            productId = null) {
+                            productId = null,
+                            accountKey,
+                            newcpcodename = null) {
+
+        this._accountSwitchKey = accountKey;
 
         let newEdgeHostname;
         if (!configName && !hostnames) {
@@ -2253,7 +2267,7 @@ class WebSite {
             })
             .then(data => {
                 propertyId = data;
-                return this.searchProperties(configName);
+                return this.searchProperties(configName, this._accountSwitchKey);
             })
             .then(data => {
                 propertyId = data["versions"]["items"][0]["propertyId"]
@@ -2268,7 +2282,7 @@ class WebSite {
                 this._propertyById[propInfo.propertyId] = propInfo;
                 this._propertyByName[configName] = propInfo;
 
-                return this._setRules(groupId, contractId, productId, configName, cpcode, hostnames, origin, secure, newRules)
+                return this._setRules(groupId, contractId, productId, configName, cpcode, hostnames, origin, secure, newRules, newcpcodename)
             })
             .then(rules => {
                 return this._updatePropertyRules(configName,
@@ -2280,58 +2294,75 @@ class WebSite {
             })
             .then(data => {
                 let ehn_exists = 0;
-                data.edgeHostnames.items.map(hostname => {
-                    if (hostname.domainPrefix = configName) {
-                        ehn_exists = 1;
-                    }
-                })
-                
                 if (edgeHostname) {
                     if (edgeHostname.indexOf("edgekey") > -1) {
                         secure = true;
                     }
-                    edgeHostnameId = edgeHostname;
+                    data.edgeHostnames.items.map(hostname => {
+                        if (hostname.edgeHostnameDomain == edgeHostname) {
+                            ehn_exists = 1;
+                        }
+                    })
+                    if (!ehn_exists) {
+                        return Promise.resolve(
+                            this._createEdgeHostname(groupId,
+                                contractId,
+                                configName,
+                                productId,
+                                null,
+                                edgeHostname,
+                                false,
+                                secure)
+                            );
+                    }
+                    //edgeHostnameId = edgeHostname;
                     return Promise.resolve(edgeHostname);
                 } else if (data.edgeHostnameId) {
                     edgeHostnameId = data.edgeHostnameId;
                     return Promise.resolve(edgeHostnameId);
                 } else {
-                    edgeHostnameId = configName;
+                    //edgeHostnameId = configName;
+                    data.edgeHostnames.items.map(hostname => {
+                        if (hostname.domainPrefix == configName) {
+                            ehn_exists = 1;
+                        }
+                    })
                     if (!ehn_exists) {
-                        return this._createEdgeHostname(groupId,
-                            contractId,
-                            configName,
-                            productId,
-                            null,
-                            edgeHostname);
+                        return Promise.resolve(
+                            this._createEdgeHostname(groupId,
+                                contractId,
+                                configName,
+                                productId,
+                                null,
+                                null,
+                                false,
+                                secure)
+                            );
                     } else {
                         return Promise.resolve();
                     }
                 }
             })
             .then(edgeHostnameId => {
-                if (newEdgeHostname) {
-                    console.error("Edge hostnames take 30 minutes to appear.  Please use modify to add the hostname at that point.")
-                    return Promise.resolve()
-                } else {
-                    return this._assignHostnames(groupId,
-                        contractId,
-                        configName,
-                        edgeHostnameId,
-                        propertyId,
-                        hostnames,
-                        false,
-                        true);
-                    }
+                return this._assignHostnames(groupId,
+                    contractId,
+                    configName,
+                    edgeHostnameId,
+                    propertyId,
+                    hostnames,
+                    false,
+                    true,
+                    1);
             }).then(() => {
                 return Promise.resolve();
             })
     }
 
-    createFromFile(hostnames = [], srcFile, configName = null, contractId = null, groupId = null, cpcode = null, origin = null, edgeHostname = null, ruleformat = null, productId = null) {
+    createFromFile(hostnames = [], srcFile, configName = null, contractId = null, groupId = null, cpcode = null, origin = null, edgeHostname = null, ruleformat = null, productId = null, accountKey, newcpcodename = null) {
         let names = this._getConfigAndHostname(configName, hostnames);
         configName = names[0];
         hostnames = names[1];
+        this._accountSwitchKey = accountKey;
         return new Promise((resolve, reject) => {
             fs.readFile(untildify(srcFile), (err, data) => {
                 if (err)
@@ -2352,7 +2383,7 @@ class WebSite {
                    cpcode = behavior.options.value.id
                 }
             })
-            return this.create(hostnames, cpcode, configName, contractId, groupId, rules, origin, edgeHostname, ruleformat, productId);
+            return this.create(hostnames, cpcode, configName, contractId, groupId, rules, origin, edgeHostname, ruleformat, productId, this._accountSwitchKey, newcpcodename);
         })
     }
 
@@ -2365,13 +2396,17 @@ class WebSite {
         let groupId = options.group || null
         let origin = options.origin || null
         let edgeHostname = options.edgehostname || null
+        let newcpcodename = options.newcpcodename || null
         let cpcode = options.cpcode || null
         let ruleformat = options.ruleformat || null
         let secure = options.secure || false
+
         
         let names = this._getConfigAndHostname(configName, hostnames);
         configName = names[0];
         hostnames = names[1];
+
+        this._accountSwitchKey = options["account-key"];
 
         let cloneFrom,
             productId,
@@ -2408,19 +2443,19 @@ class WebSite {
             })
                
             .then(clone_ehn =>{
-                if ((clone_ehn.hostnames.items) && (!edgeHostnameId)) {
+                if ((clone_ehn.hostnames.items) && (clone_ehn.hostnames.items.length > 0) && !edgeHostnameId)  {
                         edgeHostnameId = clone_ehn.hostnames.items[0].cnameTo || clone_ehn.hostnames.items[0].edgeHostnameId;
                 }
                 return Promise.resolve(edgeHostnameId)
             })
-            /*.then(edgeHostnameId => {
+            .then(edgeHostnameId => {
                 return this._createEdgeHostname(groupId,
                     contractId,
                     configName,
                     productId,
                     edgeHostnameId,
                     edgeHostname);
-            })*/
+            })
             .then(data => {
                 edgeHostnameId = data;
                 return this._createProperty(groupId,
@@ -2438,11 +2473,11 @@ class WebSite {
                 this._propertyByName[propInfo.propertyName] = propInfo;
                 this._propertyById[propInfo.propertyId] = propInfo;
                 this._propertyByName[configName] = propInfo;
-                return this.retrieveFormats(true)
+                return this.retrieveFormats(true, this._accountSwitchKey)
             })
             .then(format => {
                 latestFormat = format;
-                return this._setRules(groupId, contractId, productId, configName, cpcode, hostnames, origin, secure)
+                return this._setRules(groupId, contractId, productId, configName, cpcode, hostnames, origin, secure, newcpcodename)
             })
             .then(rules => {
                 rules.ruleFormat = latestFormat;
@@ -2450,17 +2485,18 @@ class WebSite {
                     1,
                     rules);
             })
-            /*.then(property => {
+            .then(property => {
                 return this._assignHostnames(groupId,
                         contractId,
                         configName,
                         edgeHostnameId,
                         propertyId,
                         hostnames,
+                        null,
                         false,
-                        true);
+                        1);
                         
-            })*/
+            })
             .then(data => {
                 return Promise.resolve();
             })

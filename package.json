@@ -21,7 +21,7 @@
   "dependencies": {
     "chalk": "^2.3.0",
     "child-process-promise": "^2.2.1",
-    "edgegrid": "*",
+    "edgegrid": ">=3.0.6",
     "md5": "^2.2.1",
     "nexe": "^2.0.0-rc.22",
     "options": "0.0.6",
