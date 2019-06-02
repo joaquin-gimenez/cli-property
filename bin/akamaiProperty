@@ -201,7 +201,7 @@ function createProperty(app, targetProperty, options) {
                                             options.ruleformat,
                                             options.product,
                                             options["account-key"],
-                                            options.newcpcodename);)
+                                            options.newcpcodename);
             }
         } else {
             options.srcver = numberVersion(options.srcver)
