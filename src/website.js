@@ -873,9 +873,7 @@ class WebSite {
 
             return Promise.resolve(edgeHostnameId);
         }
-        if (edgeHostname) {
-            return Promise.resolve(edgeHostname);
-        }
+        
         return new Promise((resolve, reject) => {
             console.error('Creating edge hostname for property: ' + configName);
             var domainPrefix;
