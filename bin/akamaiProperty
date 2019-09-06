@@ -332,6 +332,13 @@ function modifyProperty(app, targetProperty, options, command) {
         }
 }
 
+function listProducts(app, options) {
+    return app.listProducts(options)
+        .then(data => {
+            console.log(JSON.stringify(data,'',2))
+        });
+}
+
 function numberVersion(version) {
     if (version == null) {
         return 0;
@@ -408,6 +415,20 @@ function main () {
           } catch (error) {
             return errorMessage(error, context);
           }
+        }
+      })
+      .command('products', {
+        desc: 'list available products',
+        setup: sywac => {
+            sywac
+                .string('--contract <contract>', {
+                    desc: 'Contract to list products from',
+                    group: 'Location options:'
+                })
+        },
+        run: options => {
+            let app = new WebSite({path:options.config, section: options.section, debug: options.debug});
+            return listProducts(app, options)
         }
       })
       .command('list', {
