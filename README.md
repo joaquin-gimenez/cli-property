@@ -35,6 +35,7 @@ Commands:
   delete <property>      delete a property
   update <property>      update target property
   retrieve <property>    retrieve rules from target property
+  products               retrieve products available
 
 Command options:
   --config <config>    Config file                [file] [default: /Users/khunter/.edgerc]
@@ -223,6 +224,26 @@ Command options:
   --help               Show help                                [commands: help] [boolean]
   --version            Show version number                   [commands: version] [boolean]
 
+```
+
+### Products
+Retrieve available products.
+
+```
+Usage: akamai property products [options]
+
+Location options:
+  --contract <contract>  Contract to retrieve products from                       [string]
+
+Command options:
+  --config <config>    Config file                [file] [default: /Users/khunter/.edgerc]
+  --section <section>  Config section                             [string] [default: papi]
+  --debug <debug>      Turn on debugging.                                        [boolean]
+  --help               Show help                                [commands: help] [boolean]
+  --version            Show version number                   [commands: version] [boolean]
+
+Copyright (C) Akamai Technologies, Inc
+Visit http://github.com/akamai/cli-property for detailed documentation
 ```
 
 ## Gulp
