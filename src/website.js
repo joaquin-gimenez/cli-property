@@ -1469,6 +1469,46 @@ class WebSite {
             })
         })
     }
+
+    _listProducts(contractId) {
+        return new Promise((resolve, reject) => {
+            let request = {
+                method: 'GET',
+                path: `/papi/v1/products?contractId=${contractId}`
+            }
+            request.path += this._buildAccountSwitchKeyQuery(true);
+
+            this._edge.auth(request);
+            this._edge.send((data, response) => {
+                if (response.statusCode >= 200 && response.statusCode < 400) {
+                    response = JSON.parse(response.body);
+                    resolve(response);
+                } else {
+                    reject(response);
+                }
+            })
+        })
+    }
+
+    _listContracts() {
+        return new Promise((resolve, reject) => {
+            let request = {
+                method: 'GET',
+                path: '/papi/v1/contracts'
+            }
+            request.path += this._buildAccountSwitchKeyQuery(true);
+
+            this._edge.auth(request);
+            this._edge.send((data, response) => {
+                if (response.statusCode >= 200 && response.statusCode < 400) {
+                    response = JSON.parse(response.body);
+                    resolve(response);
+                } else {
+                    reject(response);
+                }
+            })
+        })
+    }
     
     _buildAccountSwitchKeyQuery(firstQueryParam = false) {
         return this._accountSwitchKey ? ( ( firstQueryParam ? `?` : "&" ) + `accountSwitchKey=${this._accountSwitchKey}` ) : "";
@@ -2498,6 +2538,25 @@ class WebSite {
             .then(data => {
                 return Promise.resolve();
             })
+    }
+
+    async listProducts(options) {
+        if (options.contract) {
+            return this._listProducts(options.contract);
+        } else {
+            let contracts = await this._listContracts(),
+            contractsList = contracts.contracts.items,
+            productsList = [];
+
+            for (var contract of contractsList) {
+                var products = await this._listProducts(contract.contractId)
+                productsList.push({
+                    contractId: contract.contractId,
+                    products: products.products.items
+                });
+            }
+            return productsList;
+        }
     }
 }
 
