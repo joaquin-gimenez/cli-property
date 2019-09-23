@@ -95,7 +95,7 @@ class WebSite {
     _initPropertyCache(propertyLookup) {
         let groupcontractList = [];
         let foundProperty = "";
-        console.error('Init PropertyManager cache (hostnames and property list)');
+        console.error('Init jaco PropertyManager cache (hostnames and property list)');
 
         return this._getGroupList()
             .then(data => {
